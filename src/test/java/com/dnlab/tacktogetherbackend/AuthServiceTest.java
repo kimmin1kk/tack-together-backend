@@ -1,7 +1,7 @@
 package com.dnlab.tacktogetherbackend;
 
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
-import com.dnlab.tacktogetherbackend.user.repository.MemberRepository;
+import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

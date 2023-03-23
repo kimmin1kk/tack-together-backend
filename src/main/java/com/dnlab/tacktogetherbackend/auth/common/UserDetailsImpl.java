@@ -1,7 +1,7 @@
 package com.dnlab.tacktogetherbackend.auth.common;
 
 import com.dnlab.tacktogetherbackend.auth.domain.Authority;
-import com.dnlab.tacktogetherbackend.user.domain.Member;
+import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

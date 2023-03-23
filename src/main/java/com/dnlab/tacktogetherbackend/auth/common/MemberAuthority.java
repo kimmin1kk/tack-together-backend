@@ -1,4 +1,4 @@
-package com.dnlab.tacktogetherbackend.user.common;
+package com.dnlab.tacktogetherbackend.auth.common;
 
 public enum MemberAuthority {
     ROLE_MEMBER,

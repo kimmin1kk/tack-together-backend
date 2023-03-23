@@ -1,11 +1,10 @@
 package com.dnlab.tacktogetherbackend.auth.common;
 
-import com.dnlab.tacktogetherbackend.user.repository.MemberRepository;
+import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

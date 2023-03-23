@@ -1,4 +1,4 @@
-package com.dnlab.tacktogetherbackend.user.domain;
+package com.dnlab.tacktogetherbackend.auth.domain;
 
 import javax.validation.constraints.NotNull;
 
