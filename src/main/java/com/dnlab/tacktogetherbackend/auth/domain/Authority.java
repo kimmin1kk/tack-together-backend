@@ -1,12 +1,13 @@
-package com.dnlab.tacktogetherbackend.user.domain;
+package com.dnlab.tacktogetherbackend.auth.domain;
 
+import com.dnlab.tacktogetherbackend.auth.common.MemberAuthority;
+import com.dnlab.tacktogetherbackend.user.domain.Member;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "authority")
@@ -24,14 +25,14 @@ public class Authority {
     private Member member;
 
     @NotNull
-    @Size(max = 45)
-    @Column(name = "authority", nullable = false, length = 45)
-    private String authority;
+    @Column(name = "authority_name", nullable = false, length = 45)
+    @Enumerated(EnumType.STRING)
+    private MemberAuthority authorityName;
 
     @Builder
-    public Authority(Long id, Member member, String authority) {
+    public Authority(Long id, Member member, MemberAuthority authorityName) {
         this.id = id;
         this.member = member;
-        this.authority = authority;
+        this.authorityName = authorityName;
     }
 }

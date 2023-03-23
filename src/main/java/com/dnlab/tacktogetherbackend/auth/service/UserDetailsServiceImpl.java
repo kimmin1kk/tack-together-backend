@@ -1,8 +1,8 @@
-package com.dnlab.tacktogetherbackend.user.service;
+package com.dnlab.tacktogetherbackend.auth.service;
 
-import com.dnlab.tacktogetherbackend.user.common.UserDetailsImpl;
+import com.dnlab.tacktogetherbackend.auth.common.UserDetailsImpl;
 import com.dnlab.tacktogetherbackend.user.domain.Member;
-import com.dnlab.tacktogetherbackend.user.repository.AuthorityRepository;
+import com.dnlab.tacktogetherbackend.auth.repository.AuthorityRepository;
 import com.dnlab.tacktogetherbackend.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
