@@ -20,6 +20,10 @@ public class UserDetailsImpl implements UserDetails {
     private Member member;
     private List<Authority> authorities;
 
+    /**
+     *
+     * @return member 의 authority 엔티티들을 조회하여 String 으로 변환 후 반환
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities

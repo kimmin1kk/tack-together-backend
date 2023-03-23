@@ -1,11 +1,9 @@
 package com.dnlab.tacktogetherbackend.auth.service;
 
-import com.dnlab.tacktogetherbackend.auth.dto.MemberRegistrationResponseDTO;
-import com.dnlab.tacktogetherbackend.auth.dto.RequestLoginDTO;
-import com.dnlab.tacktogetherbackend.auth.dto.MemberRegistrationDTO;
-import com.dnlab.tacktogetherbackend.auth.dto.MemberResponseDTO;
+import com.dnlab.tacktogetherbackend.auth.dto.*;
 
 public interface AuthService {
-    MemberResponseDTO signIn(RequestLoginDTO requestLoginDTO);
-    MemberRegistrationResponseDTO signUp(MemberRegistrationDTO memberRegistrationDTO);
+    ResponseLogin signIn(RequestLogin requestLogin);
+    ResponseRegistration signUp(RequestRegistration requestRegistration);
+    ResponseLogin refreshAccessToken(RequestRefreshToken requestRefreshToken);
 }

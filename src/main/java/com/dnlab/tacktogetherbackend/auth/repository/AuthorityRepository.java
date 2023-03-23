@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface AuthorityRepository extends JpaRepository<Authority, Long> {
     Optional<List<Authority>> findAuthoritiesByMember(Member member);
+    void deleteByMember(Member member);
 }

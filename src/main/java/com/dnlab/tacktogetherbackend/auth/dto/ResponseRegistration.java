@@ -12,15 +12,15 @@ import java.util.stream.Stream;
 
 @Data
 @NoArgsConstructor
-public class MemberRegistrationResponseDTO {
+public class ResponseRegistration {
     private String username;
     private String password;
     private Set<String> authorities;
 
-    public static MemberRegistrationResponseDTO of(Member member, Authority authority) {
+    public static ResponseRegistration of(Member member, Authority authority) {
         if (member == null) return null;
 
-        return MemberRegistrationResponseDTO.builder()
+        return ResponseRegistration.builder()
                 .username(member.getUsername())
                 .password(member.getPassword())
                 .authorities(Stream.of(authority).map(auth -> auth.getAuthorityName().toString()).collect(Collectors.toSet()))
@@ -28,7 +28,7 @@ public class MemberRegistrationResponseDTO {
     }
 
     @Builder
-    public MemberRegistrationResponseDTO(String username, String password, Set<String> authorities) {
+    public ResponseRegistration(String username, String password, Set<String> authorities) {
         this.username = username;
         this.password = password;
         this.authorities = authorities;

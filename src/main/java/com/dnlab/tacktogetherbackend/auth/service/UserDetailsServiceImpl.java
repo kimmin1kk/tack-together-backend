@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Member member = memberRepository.findMemberByUsername(username).orElseThrow();
+        Member member = memberRepository.findMemberByUsername(username).orElseThrow(() -> new UsernameNotFoundException("해당 아이디는 존재하지 않습니다 : " + username));
         return authorityRepository.findAuthoritiesByMember(member)
                 .map(authorities -> new UserDetailsImpl(member, authorities))
                 .orElse(null);

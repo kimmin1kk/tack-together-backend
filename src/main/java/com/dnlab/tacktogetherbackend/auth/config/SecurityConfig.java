@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
 
+/**
+ * Security 설정
+ */
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -22,6 +25,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
+    // 자동으로 스프링에서 주입됨
     public SecurityConfig(JwtTokenProvider tokenProvider, CorsFilter corsFilter, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtAccessDeniedHandler jwtAccessDeniedHandler) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
@@ -35,22 +39,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
 
+                // 핸들러 매핑
                 .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
 
+                // 세션 사용 안함
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
+                // url 권한 설정
                 .and()
                 .authorizeRequests()
-                .antMatchers(
-                        "/api/auth/signup",
-                        "/api/auth/login").permitAll()
+                .antMatchers("/api/auth/*").permitAll()
 
+                // JwtSecurityConfig 적용
                 .and()
-                .apply(new JwtSecurityConfig(tokenProvider)); // JwtSecurityConfig 적용
+                .apply(new JwtSecurityConfig(tokenProvider));
     }
 
     @Bean

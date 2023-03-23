@@ -19,6 +19,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,24 +28,19 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
 
     protected static final String AUTHORITIES_KEY = "auth";
 
-    private final String secretKey;
-    private final Long tokenValidityInMilliseconds;
-    private final UserDetailsService userDetailsService;
-    private Key key;
-    private final MemberRepository memberRepository;
+    private final Long accessTokenExpiration;
+    private final Long refreshTokenExpiration;
+    private final Key key;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            @Value("${jwt.access-token-validity-in-seconds}") Long tokenValidityInMilliseconds,
-                            UserDetailsService userDetailsService,
-                            MemberRepository memberRepository) {
-        this.secretKey = secretKey;
-        this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
-        this.userDetailsService = userDetailsService;
+                            @Value("${jwt.access-token-expiration}") Long accessTokenExpiration,
+                            @Value("${jwt.refresh-token-expiration}") Long refreshTokenExpiration) {
+        this.accessTokenExpiration = accessTokenExpiration;
+        this.refreshTokenExpiration = refreshTokenExpiration;
 
         // SecretKey 값을 decode 해서 키 변수에 할당
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.memberRepository = memberRepository;
     }
 
     // 토큰 생성
@@ -53,14 +49,29 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        long now = (new Date()).getTime();
-        Date validity = new Date(now + this.tokenValidityInMilliseconds);
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
                 .claim(AUTHORITIES_KEY, authorities)
                 .signWith(key, SignatureAlgorithm.HS384)
-                .setExpiration(validity)
+                .compact();
+    }
+
+    public String createRefreshToken() {
+        String token = UUID.randomUUID().toString();
+
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + refreshTokenExpiration);
+
+        return Jwts.builder()
+                .setSubject(token)
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
+                .signWith(key, SignatureAlgorithm.HS384)
                 .compact();
     }
 
