@@ -13,7 +13,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
@@ -107,5 +109,15 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(JwtFilter.AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
+            String token = bearerToken.substring(6);
+            log.info(token);
+            return token;
+        }
+        return null;
     }
 }

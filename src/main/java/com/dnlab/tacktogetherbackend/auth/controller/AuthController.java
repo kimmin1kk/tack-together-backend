@@ -2,6 +2,7 @@ package com.dnlab.tacktogetherbackend.auth.controller;
 
 import com.dnlab.tacktogetherbackend.auth.common.JwtFilter;
 import com.dnlab.tacktogetherbackend.auth.dto.*;
+import com.dnlab.tacktogetherbackend.auth.exception.DuplicateUsernameException;
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @Slf4j
@@ -44,7 +46,7 @@ public class AuthController {
     public ResponseEntity<ResponseRegistration> signUp(@Valid @RequestBody RequestRegistration registrationDTO) {
         try {
             return ResponseEntity.ok(authService.signUp(registrationDTO));
-        } catch (UsernameNotFoundException e) {
+        } catch (DuplicateUsernameException e) {
             return new ResponseEntity<>(HttpStatus.CONFLICT );
         }
     }
@@ -52,6 +54,15 @@ public class AuthController {
     @PostMapping("/refreshToken")
     public ResponseEntity<ResponseLogin> refreshAccessToken(@Valid @RequestBody RequestRefreshToken requestRefreshToken) {
         return ResponseEntity.ok(authService.refreshAccessToken(requestRefreshToken));
+    }
+
+    @GetMapping("/testAuth")
+    public ResponseEntity<?> testAuthentication(HttpServletRequest request) {
+        if (authService.validAuthentication(request)) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
 }

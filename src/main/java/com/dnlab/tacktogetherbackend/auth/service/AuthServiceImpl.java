@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 
 
@@ -93,5 +94,10 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    @Override
+    public boolean validAuthentication(HttpServletRequest request) {
+        return jwtTokenProvider.validateToken(jwtTokenProvider.resolveToken(request));
     }
 }
