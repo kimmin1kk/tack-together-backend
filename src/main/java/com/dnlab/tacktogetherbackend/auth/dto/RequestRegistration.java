@@ -16,4 +16,8 @@ public class RequestRegistration {
     @NotNull
     @Size(min = 3)
     private String password;
+
+    @NotNull
+    @Size(min = 2, max = 45)
+    private String name;
 }

@@ -1,8 +1,6 @@
 package com.dnlab.tacktogetherbackend.auth.domain;
 
-import javax.validation.constraints.NotNull;
 
-import com.dnlab.tacktogetherbackend.auth.domain.Authority;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +25,9 @@ public class Member {
     @Column(name = "password", nullable = false, length = 60)
     private String password;
 
+    @Column(name = "name", nullable = false, length = 45)
+    private String name;
+
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
@@ -37,10 +38,11 @@ public class Member {
     private String refreshToken;
 
     @Builder
-    public Member(Long id, String username, String password, boolean enabled, List<Authority> authorities, String refreshToken) {
+    public Member(Long id, String username, String password, String name, boolean enabled, List<Authority> authorities, String refreshToken) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.name = name;
         this.enabled = enabled;
         this.authorities = authorities;
         this.refreshToken = refreshToken;

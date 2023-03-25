@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 public class ResponseRegistration {
     private String username;
     private String password;
+    private String name;
     private Set<String> authorities;
 
     public static ResponseRegistration of(Member member, Authority authority) {
@@ -23,14 +24,16 @@ public class ResponseRegistration {
         return ResponseRegistration.builder()
                 .username(member.getUsername())
                 .password(member.getPassword())
+                .name(member.getName())
                 .authorities(Stream.of(authority).map(auth -> auth.getAuthorityName().toString()).collect(Collectors.toSet()))
                 .build();
     }
 
     @Builder
-    public ResponseRegistration(String username, String password, Set<String> authorities) {
+    public ResponseRegistration(String username, String password, String name, Set<String> authorities) {
         this.username = username;
         this.password = password;
+        this.name = name;
         this.authorities = authorities;
     }
 }
