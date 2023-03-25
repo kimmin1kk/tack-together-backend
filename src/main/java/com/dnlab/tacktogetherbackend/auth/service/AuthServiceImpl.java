@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String accessToken = jwtTokenProvider.createToken(authentication);
+        String accessToken = jwtTokenProvider.createAccessToken(authentication);
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
         memberRepository.findMemberByUsername(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."))
@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
         Member member = Member.builder()
                 .username(registrationDTO.getUsername())
                 .password(passwordEncoder.encode(registrationDTO.getPassword()))
+                .name(registrationDTO.getName())
                 .enabled(true)
                 .build();
         member = memberRepository.save(member);
@@ -80,6 +81,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public ResponseLogin refreshAccessToken(RequestRefreshToken requestRefreshToken) {
         String refreshToken = requestRefreshToken.getRefreshToken();
+        jwtTokenProvider.validateToken(refreshToken); // 유효성 검사
 
         Member member = memberRepository.findMemberByRefreshToken(refreshToken).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."));
 
@@ -88,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
 
         return ResponseLogin.builder()
                 .username(member.getUsername())
-                .accessToken(jwtTokenProvider.createToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
+                .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
                 .refreshToken(newRefreshToken)
                 .build();
     }
