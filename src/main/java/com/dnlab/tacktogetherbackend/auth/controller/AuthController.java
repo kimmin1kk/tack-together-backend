@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -23,7 +23,6 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     *
      * @param loginDTO username, password 가 담겨있는 dto
      * @return jwt(인증 토큰) 반환
      */
@@ -38,7 +37,6 @@ public class AuthController {
     }
 
     /**
-     *
      * @param registrationDTO 회원 가입 정보가 담겨있는 dto
      * @return 가입된 회원 정보 반환
      */
@@ -47,7 +45,7 @@ public class AuthController {
         try {
             return ResponseEntity.ok(authService.signUp(registrationDTO));
         } catch (DuplicateUsernameException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT );
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
 
@@ -56,8 +54,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshAccessToken(requestRefreshToken));
     }
 
+    @GetMapping("/checkUsername")
+    public ResponseEntity<ResponseCheckUsername> checkDuplicatedUsername(@RequestParam String username) {
+        return ResponseEntity.ok(authService.checkDuplicatedUsername(username));
+    }
+
+    // 인증 테스트 url
     @GetMapping("/testAuth")
-    public ResponseEntity<?> testAuthentication(HttpServletRequest request) {
+    public ResponseEntity<String> testAuthentication(HttpServletRequest request) {
         if (authService.validAuthentication(request)) {
             return new ResponseEntity<>(HttpStatus.OK);
         }

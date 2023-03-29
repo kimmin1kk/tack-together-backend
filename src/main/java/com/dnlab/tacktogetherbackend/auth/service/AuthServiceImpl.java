@@ -100,4 +100,9 @@ public class AuthServiceImpl implements AuthService {
     public boolean validAuthentication(HttpServletRequest request) {
         return jwtTokenProvider.validateToken(jwtTokenProvider.resolveToken(request));
     }
+
+    @Override
+    public ResponseCheckUsername checkDuplicatedUsername(String username) {
+        return new ResponseCheckUsername(memberRepository.existsByUsername(username));
+    }
 }
