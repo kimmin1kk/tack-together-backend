@@ -1,34 +1,36 @@
 package com.dnlab.tacktogetherbackend.match.domain;
 
+import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
 import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.List;
 
 @Entity
 @Data
-@Table(name = "matching_result")
-public class MatchingResult {
+@Table(name = "matching_result_member")
+public class MatchingResultMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "origin", nullable = false)
-    private String origin;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "matching_result_id")
+    private MatchingResult matchingResult;
+
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(name = "destination", nullable = false)
     private String destination;
 
-    @Column(name = "waypoints", nullable = false)
-    private String waypoints;
+    @Column(name = "payment_fare", nullable = false)
+    private int paymentAmount;
 
-    @Column(name = "total_fare", nullable = false)
-    private int totalFare;
-
-    @OneToMany(mappedBy = "matchingResult", fetch = FetchType.LAZY)
-    private List<MatchingResultMember> matchingResultMembers;
+    @Column(name = "distance", nullable = false)
+    private int distance;
 
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
