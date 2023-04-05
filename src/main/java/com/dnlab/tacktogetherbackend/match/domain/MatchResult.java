@@ -9,8 +9,8 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "matching_result")
-public class MatchingResult {
+@Table(name = "match_result")
+public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,8 +27,8 @@ public class MatchingResult {
     @Column(name = "total_fare", nullable = false)
     private int totalFare;
 
-    @OneToMany(mappedBy = "matchingResult", fetch = FetchType.LAZY)
-    private List<MatchingResultMember> matchingResultMembers;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "matchResult")
+    private List<MatchResultMember> matchResultMembers;
 
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;

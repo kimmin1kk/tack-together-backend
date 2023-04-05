@@ -9,15 +9,15 @@ import java.sql.Timestamp;
 
 @Entity
 @Data
-@Table(name = "matching_result_member")
-public class MatchingResultMember {
+@Table(name = "match_result_member")
+public class MatchResultMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "matching_result_id")
-    private MatchingResult matchingResult;
+    @JoinColumn(name = "match_result_id")
+    private MatchResult matchResult;
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
