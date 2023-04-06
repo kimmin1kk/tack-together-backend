@@ -13,4 +13,6 @@ public interface MatchService {
     void handlePendingMatched(MatchRequest matchRequest, MatchRequest matchedMatchRequests);
     void acceptMatch(MatchRequest matchRequest, MatchRequest matchedMatchRequest);
     void rejectMatch(MatchRequest matchRequest, MatchRequest matchedMatchRequest);
+    void resetActiveMatchRequests();
+
 }

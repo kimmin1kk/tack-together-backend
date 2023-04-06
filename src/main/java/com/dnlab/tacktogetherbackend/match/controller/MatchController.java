@@ -13,7 +13,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
