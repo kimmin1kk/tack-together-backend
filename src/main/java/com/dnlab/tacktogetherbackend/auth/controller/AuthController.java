@@ -19,7 +19,7 @@ import javax.validation.Valid;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthService authService;
+    private final AuthService authService; //깃 고치기 위해 아무 주석이나 쓰고있는중
 
     /**
      * @param loginDTO username, password 가 담겨있는 dto
