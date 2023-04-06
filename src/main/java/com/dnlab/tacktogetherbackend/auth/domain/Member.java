@@ -21,6 +21,7 @@ public class Member {
     @Column(name = "id", nullable = false)
     private Long id;
 
+
     @Column(name = "username", nullable = false, length = 45, unique = true)
     private String username;
 
@@ -29,6 +30,9 @@ public class Member {
 
     @Column(name = "name", nullable = false, length = 45)
     private String name;
+
+    @Column(name = "nickname", nullable = false, length = 16, unique = true)
+    private String nickname;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
@@ -46,11 +50,12 @@ public class Member {
     private Timestamp updateTime;
 
     @Builder
-    public Member(Long id, String username, String password, String name, boolean enabled, List<Authority> authorities, String refreshToken) {
+    public Member(Long id, String username, String password, String name,String nickname, boolean enabled, List<Authority> authorities, String refreshToken) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.name = name;
+        this.nickname = nickname;
         this.enabled = enabled;
         this.authorities = authorities;
         this.refreshToken = refreshToken;
