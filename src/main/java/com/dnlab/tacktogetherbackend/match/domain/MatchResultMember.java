@@ -2,7 +2,9 @@ package com.dnlab.tacktogetherbackend.match.domain;
 
 import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -10,6 +12,7 @@ import java.sql.Timestamp;
 @Entity
 @Data
 @Table(name = "match_result_member")
+@NoArgsConstructor
 public class MatchResultMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,5 +41,16 @@ public class MatchResultMember {
     @PrePersist
     public void prePersist() {
         this.createTime = TimestampUtil.getCurrentTime();
+    }
+
+    @Builder
+    public MatchResultMember(Long id, MatchResult matchResult, Member member, String destination, int paymentAmount, int distance, Timestamp createTime) {
+        this.id = id;
+        this.matchResult = matchResult;
+        this.member = member;
+        this.destination = destination;
+        this.paymentAmount = paymentAmount;
+        this.distance = distance;
+        this.createTime = createTime;
     }
 }

@@ -1,15 +1,19 @@
 package com.dnlab.tacktogetherbackend.match.domain;
 
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
 @Table(name = "match_result")
+@NoArgsConstructor
 public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +32,7 @@ public class MatchResult {
     private int totalFare;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "matchResult")
-    private List<MatchResultMember> matchResultMembers;
+    private Set<MatchResultMember> matchResultMembers = new HashSet<>();
 
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
@@ -36,5 +40,16 @@ public class MatchResult {
     @PrePersist
     public void prePersist() {
         this.createTime = TimestampUtil.getCurrentTime();
+    }
+
+    @Builder
+    public MatchResult(Long id, String origin, String destination, String waypoints, int totalFare, Set<MatchResultMember> matchResultMembers, Timestamp createTime) {
+        this.id = id;
+        this.origin = origin;
+        this.destination = destination;
+        this.waypoints = waypoints;
+        this.totalFare = totalFare;
+        this.matchResultMembers = matchResultMembers;
+        this.createTime = createTime;
     }
 }
