@@ -1,11 +1,13 @@
 package com.dnlab.tacktogetherbackend.auth.domain;
 
 
+import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +39,12 @@ public class Member {
     @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Column(name = "create_time", nullable = false)
+    private Timestamp createTime;
+
+    @Column(name = "update_time", nullable = false)
+    private Timestamp updateTime;
+
     @Builder
     public Member(Long id, String username, String password, String name, boolean enabled, List<Authority> authorities, String refreshToken) {
         this.id = id;
@@ -46,5 +54,17 @@ public class Member {
         this.enabled = enabled;
         this.authorities = authorities;
         this.refreshToken = refreshToken;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        Timestamp currentTime = TimestampUtil.getCurrentTime();
+        this.createTime = currentTime;
+        this.updateTime = currentTime;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updateTime = TimestampUtil.getCurrentTime();
     }
 }

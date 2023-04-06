@@ -93,8 +93,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(member.getUsername())
                 .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
                 .refreshToken(newRefreshToken)
-                .build()
-                ;
+                .build();
     }
 
     @Override
