@@ -38,8 +38,8 @@ public class MatchController {
 
         // 매칭 조건이 맞으면 각 사용자들에게 매칭 정보 전송
         if (matchedMatchRequest != null) {
-            messagingTemplate.convertAndSendToUser(String.valueOf(matchedMatchRequest.getMemberId()), "/queue/match", matchedMatchRequest);
-            messagingTemplate.convertAndSendToUser(String.valueOf(matchRequest.getMemberId()), "/queue/match", matchRequest);
+            messagingTemplate.convertAndSendToUser(String.valueOf(matchedMatchRequest.getMemberId()), "/queue/match", matchRequest);
+            messagingTemplate.convertAndSendToUser(String.valueOf(matchRequest.getMemberId()), "/queue/match", matchedMatchRequest);
             matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
         }
     }
