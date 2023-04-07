@@ -66,6 +66,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(registrationDTO.getUsername())
                 .password(passwordEncoder.encode(registrationDTO.getPassword()))
                 .name(registrationDTO.getName())
+                .nickname(registrationDTO.getNickname())
                 .enabled(true)
                 .build();
         member = memberRepository.save(member);

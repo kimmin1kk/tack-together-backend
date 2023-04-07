@@ -20,4 +20,8 @@ public class RequestRegistration {
     @NotNull
     @Size(min = 2, max = 45)
     private String name;
+
+    @NotNull
+    @Size(min = 2, max = 16)
+    private String nickname;
 }
