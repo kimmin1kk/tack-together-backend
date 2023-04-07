@@ -3,8 +3,6 @@ package com.dnlab.tacktogetherbackend.match.service;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 
-import java.util.List;
-
 public interface MatchService {
     MatchRequest addMatchRequest(MatchRequestDTO matchRequestDTO);
     MatchRequest getMatchRequestById(String matchRequestId);
