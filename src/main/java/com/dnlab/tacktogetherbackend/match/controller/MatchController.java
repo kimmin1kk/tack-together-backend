@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.security.Principal;
 import java.util.Objects;
 
 @Slf4j
@@ -27,8 +28,11 @@ public class MatchController {
 
     // 매칭 요청 처리
     @MessageMapping("/match/request")
-    public void handleMatchRequest(MatchRequestDTO matchRequestDTO, SimpMessageHeaderAccessor headerAccessor) {
+    public void handleMatchRequest(MatchRequestDTO matchRequestDTO,
+                                   SimpMessageHeaderAccessor headerAccessor,
+                                   Principal principal) {
         // DTO 로부터 MatchRequest 객체를 생성하고 맵에 추가
+        matchRequestDTO.setUsername(principal.getName());
         final MatchRequest matchRequest = matchService.addMatchRequest(matchRequestDTO);
         Objects.requireNonNull(headerAccessor.getSessionAttributes()).put(MATCH_REQUEST_ID, matchRequest.getId());
 
@@ -37,8 +41,8 @@ public class MatchController {
 
         // 매칭 조건이 맞으면 각 사용자들에게 매칭 정보 전송
         if (matchedMatchRequest != null) {
-            messagingTemplate.convertAndSendToUser(String.valueOf(matchedMatchRequest.getMemberId()), "/queue/match", matchRequest);
-            messagingTemplate.convertAndSendToUser(String.valueOf(matchRequest.getMemberId()), "/queue/match", matchedMatchRequest);
+            messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), "/queue/match", matchRequest);
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), "/queue/match", matchedMatchRequest);
             matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
         }
     }

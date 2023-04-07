@@ -46,6 +46,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/auth/*").permitAll()
+                .antMatchers("/app/match/*").hasRole("ROLE_MEMBER")
 
                 // JwtSecurityConfig 적용
                 .and()
