@@ -1,9 +1,13 @@
 package com.dnlab.tacktogetherbackend.match.common;
 
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MatchRequest {
     private String id;
     private String username;
