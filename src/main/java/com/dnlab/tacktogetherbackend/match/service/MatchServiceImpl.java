@@ -4,11 +4,11 @@ import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
 import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.config.MatchRangeProperties;
-import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gavaghan.geodesy.Ellipsoid;
 import org.gavaghan.geodesy.GeodeticCalculator;
 import org.gavaghan.geodesy.GeodeticMeasurement;
@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchServiceImpl implements MatchService {
@@ -37,6 +38,8 @@ public class MatchServiceImpl implements MatchService {
     public MatchRequest addMatchRequest(MatchRequestDTO matchRequestDTO) {
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
+
+        log.info("MatchRequest is added, " + matchRequest);
         return matchRequest;
     }
 
@@ -52,6 +55,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public MatchRequest findMatchingMatchRequests(MatchRequest matchRequest) {
+        log.info("finding MatchReq");
         // 매칭 로직 구현
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
                 .filter(key -> !key.equals(matchRequest.getId()))
