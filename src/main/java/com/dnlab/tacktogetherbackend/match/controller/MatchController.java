@@ -11,12 +11,14 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
 import java.util.Objects;
 
 @Slf4j
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Controller
 @RequiredArgsConstructor
 public class MatchController {
@@ -41,6 +43,8 @@ public class MatchController {
 
         // 매칭 조건이 맞으면 각 사용자들에게 매칭 정보 전송
         if (matchedMatchRequest != null) {
+            log.info("Match Succeed!");
+            log.info("matched match request info : " + matchedMatchRequest);
             messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), "/queue/match", matchRequest);
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), "/queue/match", matchedMatchRequest);
             matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
