@@ -1,9 +1,13 @@
 package com.dnlab.tacktogetherbackend.match.service;
 
+import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
 import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
+import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.config.MatchRangeProperties;
+import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
+import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
@@ -18,7 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -26,8 +30,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MatchServiceImpl implements MatchService {
+    private final MemberRepository memberRepository;
     private final Map<String, MatchRequest> activeMatchRequests = new ConcurrentHashMap<>();
-    private final Map<String, Set<MatchRequest>> matchingSessions = new ConcurrentHashMap<>();
+    private final Map<String, MatchRequest> waitingMatchedRequests = new ConcurrentHashMap<>();
 
     private final MatchResultRepository matchResultRepository;
     private final MatchResultMemberRepository matchResultMemberRepository;
@@ -44,12 +49,21 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public MatchRequest getMatchRequestById(String matchRequestId) {
-        return activeMatchRequests.get(matchRequestId);
+    public Optional<MatchRequest> getMatchRequestById(String matchRequestId) {
+        MatchRequest matchRequest = activeMatchRequests.get(matchRequestId);
+        if (matchRequest == null) {
+            matchRequest = waitingMatchedRequests.get(matchRequestId);
+        }
+        return Optional.of(matchRequest);
     }
 
     @Override
     public void removeRideRequest(String matchRequestId) {
+        MatchRequest matchRequest = activeMatchRequests.get(matchRequestId);
+        if (matchRequest.getMatchedMatchRequestId() != null) {
+            rejectMatch(matchRequest);
+        }
+
         activeMatchRequests.remove(matchRequestId);
     }
 
@@ -71,24 +85,42 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public void handlePendingMatched(MatchRequest matchRequest, MatchRequest matchedMatchRequest) {
         // 매칭이 성사된 후 대기 상태를 처리
+        // 매칭 대상에 포함되지 않게 다른 map 으로 격리
+        waitingMatchedRequests.put(matchRequest.getId(), activeMatchRequests.remove(matchRequest.getId()));
+        waitingMatchedRequests.put(matchedMatchRequest.getId(), activeMatchRequests.remove(matchedMatchRequest.getId()));
     }
 
     // 매칭 수락 로직
     @Override
     @Transactional
-    public void acceptMatch(MatchRequest matchRequest, MatchRequest matchedMatchRequest) {
+    public MatchDecisionStatus acceptMatch(MatchRequest matchRequest) {
+        matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
+        MatchRequest matchedRequest = waitingMatchedRequests.get(matchRequest.getMatchedMatchRequestId());
 
+        if (matchedRequest == null) {
 
+        }
+        switch (matchedRequest.getMatchDecisionStatus()) {
+            case ACCEPTED:
+                handleAcceptedMatchedRequests(matchRequest, matchedRequest);
+                break;
+            case REJECTED:
+            case WAITING:
+            default:
+        }
+
+        return null;
     }
 
     @Override
-    public void rejectMatch(MatchRequest matchRequest, MatchRequest matchedMatchRequest) {
+    public void rejectMatch(MatchRequest matchRequest) {
         // 매칭 거절 로직
     }
 
     @Override
-    public void resetActiveMatchRequests() {
+    public void resetMatchRequests() {
         activeMatchRequests.clear();
+        waitingMatchedRequests.clear();
     }
 
     private boolean isSuitableRequests(MatchRequest originReg, MatchRequest targetReq) {
@@ -162,5 +194,53 @@ public class MatchServiceImpl implements MatchService {
         GeodeticCalculator calculator = new GeodeticCalculator();
         GeodeticMeasurement measurement = calculator.calculateGeodeticMeasurement(Ellipsoid.WGS84, position1, position2);
         return (int) measurement.getPointToPointDistance();
+    }
+
+    private void handleAcceptedMatchedRequests(MatchRequest match1, MatchRequest match2) {
+        int distance1 = kakaoMapService.getDistance(RequestDirections.builder()
+                .origin(match1.getOrigin())
+                .destination(match1.getDestination())
+                .waypoints(match2.getDestination())
+                .build());
+
+        int distance2 = kakaoMapService.getDistance(RequestDirections.builder()
+                .origin(match2.getOrigin())
+                .destination(match2.getDestination())
+                .waypoints(match1.getDestination())
+                .build());
+
+        MatchRequest fartherReq;
+        MatchRequest nearerReq;
+        if (distance1 > distance2) {
+            fartherReq = match2;
+            nearerReq = match1;
+        } else {
+            fartherReq = match1;
+            nearerReq = match2;
+        }
+
+        MatchResult matchResult = MatchResult.builder()
+                .origin(fartherReq.getOrigin())
+                .destination(fartherReq.getDestination())
+                .waypoints(nearerReq.getDestination())
+                .build();
+
+        matchResultRepository.save(matchResult);
+        matchResultMemberRepository.save(MatchResultMember.builder()
+                .destination(fartherReq.getDestination())
+                .distance(Math.min(distance1, distance2))
+                .matchResult(matchResult)
+                .member(memberRepository.findMemberByUsername(fartherReq.getUsername()).orElseThrow())
+                .build());
+        matchResultMemberRepository.save(MatchResultMember.builder()
+                .destination(nearerReq.getDestination())
+                .distance(kakaoMapService.getDistance(RequestDirections.ofMatchRequest(nearerReq)))
+                .matchResult(matchResult)
+                .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
+                .build());
+    }
+
+    private void handleRejected(MatchRequest m1, MatchRequest m2) {
+
     }
 }

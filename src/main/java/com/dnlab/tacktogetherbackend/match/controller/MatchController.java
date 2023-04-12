@@ -1,11 +1,14 @@
 package com.dnlab.tacktogetherbackend.match.controller;
 
+import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.dto.UserResponse;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -27,6 +30,7 @@ public class MatchController {
     private final MatchService matchService;
 
     private static final String MATCH_REQUEST_ID = "matchRequestId";
+    private static final String DESTINATION_URL = "/queue/match";
 
     // 매칭 요청 처리
     @MessageMapping("/match/request")
@@ -45,8 +49,11 @@ public class MatchController {
         if (matchedMatchRequest != null) {
             log.info("Match Succeed!");
             log.info("matched match request info : " + matchedMatchRequest);
-            messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), "/queue/match", matchRequest);
-            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), "/queue/match", matchedMatchRequest);
+            matchRequest.setMatchedMatchRequestId(matchedMatchRequest.getId());
+            matchedMatchRequest.setMatchedMatchRequestId(matchRequest.getId());
+
+            messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), DESTINATION_URL, matchRequest);
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, matchedMatchRequest);
             matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
         }
     }
@@ -55,20 +62,25 @@ public class MatchController {
     @MessageMapping("/match/accept")
     public void handleAccept(@Payload String matchedRequestId, SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
-        MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId);
-        MatchRequest matchedMatchRequest = matchService.getMatchRequestById(matchedRequestId);
+        MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
+        MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getMatchedMatchRequestId()).orElseThrow();
 
-        matchService.acceptMatch(matchRequest, matchedMatchRequest);
+        MatchDecisionStatus status = matchService.acceptMatch(matchRequest);
+
+        if (status.equals(MatchDecisionStatus.ACCEPTED)) {
+            sendAcceptedMessage(matchRequest, matchedRequest);
+        } else {
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new UserResponse(status.toString()));
+        }
     }
 
     // 매칭 거절 처리
     @MessageMapping("/match/reject")
     public void handleReject(@Payload String matchedRequestId, SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
-        MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId);
-        MatchRequest matchedMatchRequest = matchService.getMatchRequestById(matchedRequestId);
+        MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
 
-        matchService.rejectMatch(matchRequest, matchedMatchRequest);
+        matchService.rejectMatch(matchRequest);
     }
 
     // WebSocket 연결 해제 처리
@@ -80,5 +92,10 @@ public class MatchController {
         if (matchRequestId != null) {
             matchService.removeRideRequest(matchRequestId);
         }
+    }
+
+    private void sendAcceptedMessage(MatchRequest m1, MatchRequest m2) {
+        messagingTemplate.convertAndSendToUser(m1.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
+        messagingTemplate.convertAndSendToUser(m2.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
     }
 }
