@@ -28,6 +28,12 @@ public class MatchResult {
     @Column(name = "waypoints", nullable = false)
     private String waypoints;
 
+    @Column(name = "total_distance", nullable = false)
+    private int totalDistance;
+
+    @Column(name = "match_end_time")
+    private Timestamp matchEndTime;
+
     @Column(name = "total_fare", nullable = false)
     private int totalFare;
 
@@ -43,11 +49,22 @@ public class MatchResult {
     }
 
     @Builder
-    public MatchResult(Long id, String origin, String destination, String waypoints, int totalFare, Set<MatchResultMember> matchResultMembers, Timestamp createTime) {
+
+    public MatchResult(Long id,
+                       String origin,
+                       String destination,
+                       String waypoints,
+                       int totalDistance,
+                       Timestamp matchEndTime,
+                       int totalFare,
+                       Set<MatchResultMember> matchResultMembers,
+                       Timestamp createTime) {
         this.id = id;
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
+        this.totalDistance = totalDistance;
+        this.matchEndTime = matchEndTime;
         this.totalFare = totalFare;
         this.matchResultMembers = matchResultMembers;
         this.createTime = createTime;
