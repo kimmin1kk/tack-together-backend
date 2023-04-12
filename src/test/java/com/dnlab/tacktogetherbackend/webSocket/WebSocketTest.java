@@ -157,7 +157,6 @@ class WebSocketTest {
         log.info("session subscribed, url : " + subscribeUrl);
         stompSession.send("/app/match/request", req);
 
-
         MatchRequest receivedReq = blockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
 

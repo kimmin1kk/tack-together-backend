@@ -29,7 +29,7 @@ public class MatchResultMember {
     @Column(name = "destination", nullable = false)
     private String destination;
 
-    @Column(name = "payment_fare", nullable = false)
+    @Column(name = "payment_fare")
     private int paymentAmount;
 
     @Column(name = "distance", nullable = false)
@@ -38,13 +38,16 @@ public class MatchResultMember {
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
 
+    @Column(name = "drop_off_time")
+    private Timestamp dropOffTime;
+
     @PrePersist
     public void prePersist() {
         this.createTime = TimestampUtil.getCurrentTime();
     }
 
     @Builder
-    public MatchResultMember(Long id, MatchResult matchResult, Member member, String destination, int paymentAmount, int distance, Timestamp createTime) {
+    public MatchResultMember(Long id, MatchResult matchResult, Member member, String destination, int paymentAmount, int distance, Timestamp createTime, Timestamp dropOffTime) {
         this.id = id;
         this.matchResult = matchResult;
         this.member = member;
@@ -52,5 +55,6 @@ public class MatchResultMember {
         this.paymentAmount = paymentAmount;
         this.distance = distance;
         this.createTime = createTime;
+        this.dropOffTime = dropOffTime;
     }
 }
