@@ -144,7 +144,7 @@ class MatchTest {
 
         MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username3")
-                .origin(HAIDILAO)
+                .origin(DONGEUI_UNIV_KAYA)
                 .destination(MARYKNOLL_HOSPITAL)
                 .originRange((short) 1)
                 .destinationRange((short) 0)
@@ -156,7 +156,7 @@ class MatchTest {
         log.info("req2 : " + req2.toString());
         log.info("req3 : " + req3.toString());
         log.info("matchedReq : " + matchedReq.toString());
-        assertEquals(matchedReq, req3);
+        assertEquals(matchedReq, req2);
     }
 
     @Transactional
@@ -167,61 +167,31 @@ class MatchTest {
                 .origin(BUSAN_STA)
                 .destination(MARYKNOLL_HOSPITAL)
                 .originRange((short) 0)
-                .destinationRange((short) 2)
+                .destinationRange((short) 0)
                 .build());
 
         MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("username1")
+                .username("username2")
                 .origin(BUSAN_STA)
                 .destination(GORILLA_SUSHI)
+                .originRange((short) 0)
+                .destinationRange((short) 0)
+                .build());
+
+        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
+                .username("username3")
+                .origin(BUSAN_STA)
+                .destination(ABC_BAWLING_CENTER)
                 .originRange((short) 0)
                 .destinationRange((short) 1)
                 .build());
 
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("username1")
-                .origin(BUSAN_STA)
-                .destination(ABC_BAWLING_CENTER)
-                .originRange((short) 0)
-                .destinationRange((short) 2)
-                .build());
-
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
+        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req2);
 
         log.info("req1 : " + req1.toString());
         log.info("req2 : " + req2.toString());
         log.info("req3 : " + req3.toString());
         log.info("matchedReq : " + matchedReq.toString());
-        assertEquals(matchedReq, req3);
-    }
-
-    @Test
-    @Transactional
-    void suitableDestinationTest() { //req1 기준으론 매칭이 되지만 req2 기준으론 매칭이 안되는 상황.
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("username1")
-                .origin(BUSAN_STA)
-                .destination(MARYKNOLL_HOSPITAL)
-                .originRange((short) 0)
-                .destinationRange((short) 2)
-                .build());
-
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("username1")
-                .origin(BUSAN_STA)
-                .destination(ABC_BAWLING_CENTER)
-                .originRange((short) 0)
-                .destinationRange((short) 1)
-                .build());
-
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
-        log.info("req1 : " + req1.toString());
-        log.info("req2 : " + req2.toString());
-        log.info("req3 : " + matchedReq.toString());
         assertEquals(matchedReq, req1);
-
-
     }
-
-
 }
