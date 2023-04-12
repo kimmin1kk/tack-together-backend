@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +28,6 @@ public class MatchRequest {
     }
 
     private String generateRequestId(String username) {
-        return username + "-" + System.currentTimeMillis();
+        return username + "-" + UUID.randomUUID();
     }
 }
