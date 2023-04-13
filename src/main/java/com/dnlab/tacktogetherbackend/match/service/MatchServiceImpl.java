@@ -18,11 +18,14 @@ import org.gavaghan.geodesy.GeodeticCalculator;
 import org.gavaghan.geodesy.GeodeticMeasurement;
 import org.gavaghan.geodesy.GlobalPosition;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -59,11 +62,6 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void removeRideRequest(String matchRequestId) {
-        MatchRequest matchRequest = activeMatchRequests.get(matchRequestId);
-        if (matchRequest.getMatchedMatchRequestId() != null) {
-            rejectMatch(matchRequest);
-        }
-
         activeMatchRequests.remove(matchRequestId);
     }
 
@@ -85,6 +83,9 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public void handlePendingMatched(MatchRequest matchRequest, MatchRequest matchedMatchRequest) {
         // 매칭이 성사된 후 대기 상태를 처리
+        matchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
+        matchedMatchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
+
         // 매칭 대상에 포함되지 않게 다른 map 으로 격리
         waitingMatchedRequests.put(matchRequest.getId(), activeMatchRequests.remove(matchRequest.getId()));
         waitingMatchedRequests.put(matchedMatchRequest.getId(), activeMatchRequests.remove(matchedMatchRequest.getId()));
@@ -97,9 +98,6 @@ public class MatchServiceImpl implements MatchService {
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
         MatchRequest matchedRequest = waitingMatchedRequests.get(matchRequest.getMatchedMatchRequestId());
 
-        if (matchedRequest == null) {
-
-        }
         switch (matchedRequest.getMatchDecisionStatus()) {
             case ACCEPTED:
                 handleAcceptedMatchedRequests(matchRequest, matchedRequest);
@@ -149,7 +147,7 @@ public class MatchServiceImpl implements MatchService {
         int originDistance = kakaoMapService.getDistance(RequestDirections.ofMatchRequest(finalDestinationReq));
         int shorterTotalDistance = Math.min(distance1, distance2);
 
-        return convertDestinationRangeLevelToRange(req1.getDestinationRange() < req2.getDestinationRange() ? req1.getDestinationRange() : req2.getDestinationRange()) > (shorterTotalDistance - originDistance);
+        return convertDestinationRangeLevelToRange(req1.getDestinationRange() < req2.getDestinationRange() ? req1.getDestinationRange() : req2.getDestinationRange()) > (shorterTotalDistance - Objects.requireNonNull(originDistance));
     }
 
     /**
@@ -197,6 +195,7 @@ public class MatchServiceImpl implements MatchService {
     }
 
     private void handleAcceptedMatchedRequests(MatchRequest match1, MatchRequest match2) {
+
         int distance1 = kakaoMapService.getDistance(RequestDirections.builder()
                 .origin(match1.getOrigin())
                 .destination(match1.getDestination())
@@ -209,8 +208,13 @@ public class MatchServiceImpl implements MatchService {
                 .waypoints(match1.getDestination())
                 .build());
 
+        log.info("Distances are Called");
+        log.info("distance1: " + distance1);
+        log.info("distance2: " + distance2);
+
         MatchRequest fartherReq;
         MatchRequest nearerReq;
+
         if (distance1 > distance2) {
             fartherReq = match2;
             nearerReq = match1;

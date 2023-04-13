@@ -47,7 +47,7 @@ class MatchTest {
 
     @AfterEach
     void resetMap() {
-        matchService.resetActiveMatchRequests();
+        matchService.resetMatchRequests();
     }
 
 
@@ -217,7 +217,6 @@ class MatchTest {
         MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
         log.info("req1 : " + req1.toString());
         log.info("req2 : " + req2.toString());
-        log.info("req3 : " + matchedReq.toString());
         assertEquals(matchedReq, req1);
 
 

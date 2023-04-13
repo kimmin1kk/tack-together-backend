@@ -5,5 +5,6 @@ import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.Response
 
 public interface KakaoMapService {
     ResponseDirections getRoute(RequestDirections requestDirections);
+
     int getDistance(RequestDirections requestDirections);
 }

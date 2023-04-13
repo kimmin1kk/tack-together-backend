@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -47,6 +48,6 @@ public class MatchRequest implements Serializable {
     }
 
     private String generateRequestId(String username) {
-        return username + "-" + System.currentTimeMillis();
+        return username + "-" + UUID.randomUUID();
     }
 }
