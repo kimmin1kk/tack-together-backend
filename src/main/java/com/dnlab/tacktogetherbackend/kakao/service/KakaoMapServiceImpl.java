@@ -29,9 +29,8 @@ public class KakaoMapServiceImpl implements KakaoMapService {
 
     @Override
     public int getDistance(RequestDirections requestDirections) {
-        return this.getRoute(requestDirections) // ResponseDirections
-                .getRoutes().stream() // List<Route>
-                .findFirst().orElseThrow() // Route
+        return getRoute(requestDirections).getRoutes()
+                .stream().findFirst().orElseThrow()
                 .getSummary().getDistance();
     }
 }

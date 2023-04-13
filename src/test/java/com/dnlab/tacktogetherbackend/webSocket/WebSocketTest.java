@@ -1,11 +1,14 @@
 package com.dnlab.tacktogetherbackend.webSocket;
 
+import com.dnlab.tacktogetherbackend.SpringBootTestConfiguration;
 import com.dnlab.tacktogetherbackend.auth.dto.RequestLogin;
 import com.dnlab.tacktogetherbackend.auth.dto.RequestRegistration;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseLogin;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseRegistration;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
+import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.concurrent.ListenableFuture;
@@ -41,8 +45,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ContextConfiguration(classes = SpringBootTestConfiguration.class)
 @Transactional
 class WebSocketTest {
+    @Autowired
+    private MatchResultMemberRepository matchResultMemberRepository;
 
     @LocalServerPort
     private int port;
@@ -92,7 +99,7 @@ class WebSocketTest {
         stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(taskScheduler);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        stompClient.setDefaultHeartbeat(new long[] {10_000, 10_000}); // 클라이언트 측 하트비트 설정
+        stompClient.setDefaultHeartbeat(new long[]{10_000, 10_000}); // 클라이언트 측 하트비트 설정
 
         baseUrl = URI.create("http://localhost:" + port);
         webSocketUrl = baseUrl + "/match";
@@ -136,6 +143,38 @@ class WebSocketTest {
     public void tearDown() {
         stompSession.disconnect();
         stompClient.stop();
+    }
+
+    @Test
+    @Transactional
+    void testAcceptation() throws InterruptedException, ExecutionException, TimeoutException {
+        // 매칭 테스트
+        MatchRequestDTO req = MatchRequestDTO.builder()
+                .origin(STUDENT_PLAZA)
+                .destination(NAENGJEONG_STA)
+                .originRange((short) 0)
+                .destinationRange((short) 0)
+                .build();
+
+        log.info("sending : " + req);
+        log.info("sessionId : " + stompSession.getSessionId());
+        String subscribeUrl = "/user/" + USERNAME + "/queue/match";
+        stompSession.subscribe(subscribeUrl, new TestStompFrameHandler());
+
+        log.info("session subscribed, url : " + subscribeUrl);
+        stompSession.send("/app/match/request", req);
+
+        MatchRequest receivedReq = blockingQueue.poll(20, TimeUnit.SECONDS);
+        log.info("received : " + receivedReq);
+
+        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
+
+        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId());
+
+        List<MatchResultMember> matchResultMember = matchResultMemberRepository.findMatchResultMembersByMemberUsername(USERNAME);
+
+        // Then
+        log.info("MatchResultMember : " + matchResultMember);
     }
 
     @Test
