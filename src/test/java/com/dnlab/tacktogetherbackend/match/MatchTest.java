@@ -1,16 +1,12 @@
 package com.dnlab.tacktogetherbackend.match;
 
 import com.dnlab.tacktogetherbackend.SpringBootTestConfiguration;
-import com.dnlab.tacktogetherbackend.auth.dto.RequestRegistration;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
-import com.dnlab.tacktogetherbackend.auth.service.AuthService;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,7 +43,7 @@ class MatchTest {
 
     @AfterEach
     void resetMap() {
-        matchService.resetActiveMatchRequests();
+        matchService.resetMatchRequests();
     }
 
 
