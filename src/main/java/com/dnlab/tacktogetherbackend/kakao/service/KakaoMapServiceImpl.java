@@ -4,11 +4,13 @@ import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
 import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.ResponseDirections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-public class WebFluxKakaoMapServiceImpl implements KakaoMapService {
+public class KakaoMapServiceImpl implements KakaoMapService {
     private final WebClient webClient;
 
     @Override
