@@ -1,6 +1,8 @@
+
 package com.dnlab.tacktogetherbackend.auth.common;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -13,13 +15,14 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 import java.util.Map;
 
 @RequiredArgsConstructor
+@Slf4j
 public class JwtHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest) {
-            String jwt = resolveToken(request);
+            String jwt = jwtTokenProvider.resolveToken(request);
 
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 Authentication authentication = jwtTokenProvider.getAuthentication(jwt);
@@ -31,12 +34,4 @@ public class JwtHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
         return false;
     }
 
-    private String resolveToken(ServerHttpRequest request) {
-        String bearerToken = request.getHeaders().getFirst("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-
-        return null;
-    }
 }

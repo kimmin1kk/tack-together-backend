@@ -18,14 +18,12 @@ import org.gavaghan.geodesy.GeodeticCalculator;
 import org.gavaghan.geodesy.GeodeticMeasurement;
 import org.gavaghan.geodesy.GlobalPosition;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -98,16 +96,12 @@ public class MatchServiceImpl implements MatchService {
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
         MatchRequest matchedRequest = waitingMatchedRequests.get(matchRequest.getMatchedMatchRequestId());
 
-        switch (matchedRequest.getMatchDecisionStatus()) {
-            case ACCEPTED:
-                handleAcceptedMatchedRequests(matchRequest, matchedRequest);
-                break;
-            case REJECTED:
-            case WAITING:
-            default:
+        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
+            handleAcceptedMatchedRequests(matchRequest, matchedRequest);
+            return MatchDecisionStatus.ACCEPTED;
         }
 
-        return null;
+        return matchedRequest.getMatchDecisionStatus();
     }
 
     @Override
