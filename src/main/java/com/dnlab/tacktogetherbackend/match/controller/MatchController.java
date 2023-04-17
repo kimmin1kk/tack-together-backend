@@ -36,6 +36,7 @@ public class MatchController {
     public void handleMatchRequest(MatchRequestDTO matchRequestDTO,
                                    SimpMessageHeaderAccessor headerAccessor,
                                    Principal principal) {
+        log.debug("매칭 요청 수신");
         // DTO 로부터 MatchRequest 객체를 생성하고 맵에 추가
         matchRequestDTO.setUsername(principal.getName());
         final MatchRequest matchRequest = matchService.addMatchRequest(matchRequestDTO);
