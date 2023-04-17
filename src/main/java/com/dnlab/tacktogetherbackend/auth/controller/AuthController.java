@@ -6,6 +6,7 @@ import com.dnlab.tacktogetherbackend.auth.exception.DuplicateUsernameException;
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,15 @@ import javax.validation.Valid;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final String authorizationHeader;
+
+    public AuthController(AuthService authService,
+                          @Value("${jwt.header}") String authorizationHeader) {
+        this.authService = authService;
+        this.authorizationHeader = authorizationHeader;
+    }
 
     /**
      * @param loginDTO username, password 가 담겨있는 dto
@@ -30,7 +37,7 @@ public class AuthController {
         ResponseLogin token = authService.signIn(loginDTO);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer" + token.getAccessToken());
+        httpHeaders.add(authorizationHeader, "Bearer " + token.getAccessToken());
 
         return new ResponseEntity<>(token, httpHeaders, HttpStatus.OK);
     }

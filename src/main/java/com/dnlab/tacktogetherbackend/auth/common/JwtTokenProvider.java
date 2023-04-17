@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,7 @@ import org.springframework.util.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,14 +33,17 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
     private final Long refreshTokenExpiration;
     private final Key key;
     private final UserDetailsService userDetailsService;
+    private final String authorizationHeader;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             @Value("${jwt.access-token-expiration}") Long accessTokenExpiration,
                             @Value("${jwt.refresh-token-expiration}") Long refreshTokenExpiration,
+                            @Value("${jwt.header}") String authorizationHeader,
                             UserDetailsService userDetailsService) {
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
         this.userDetailsService = userDetailsService;
+        this.authorizationHeader = authorizationHeader;
 
         // SecretKey 값을 decode 해서 키 변수에 할당
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
@@ -112,12 +117,44 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
     }
 
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(JwtFilter.AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
-            String token = bearerToken.substring(6);
+        Enumeration<String> names = request.getHeaderNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
+            log.debug("headerName : " + name + "\t\t|value : " + request.getHeader(name));
+        }
+
+        // http request 헤더 토큰
+        String bearerToken = request.getHeader(authorizationHeader);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            String token = bearerToken.substring(7);
             log.info(token);
             return token;
         }
-        return null;
+
+        // 쿼리 파라미터 토큰
+        return resolveTokenByParameter(request);
+    }
+
+    public String resolveToken(ServerHttpRequest request) {
+        // 헤더 토큰
+        String bearerToken = request.getHeaders().getFirst("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        // 쿼리 파라미터 토큰
+        HttpServletRequest servletRequest = (HttpServletRequest) request;
+
+        Enumeration<String> names = servletRequest.getHeaderNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
+            log.debug("headerName : " + name + "\t\t|value : " + ((HttpServletRequest) request).getHeader(name));
+        }
+
+        return resolveTokenByParameter(servletRequest);
+    }
+
+    private String resolveTokenByParameter(HttpServletRequest request) {
+        return request.getParameter("token");
     }
 }
