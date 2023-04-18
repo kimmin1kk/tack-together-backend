@@ -1,9 +1,8 @@
 package com.dnlab.tacktogetherbackend.history.service;
 
-import com.dnlab.tacktogetherbackend.history.dto.HistoryDto;
-
-import java.util.List;
+import com.dnlab.tacktogetherbackend.history.dto.HistoriesDTO;
 
 public interface HistoryService {
+    HistoriesDTO findHistoriesByUserName(String username);
 
 }
