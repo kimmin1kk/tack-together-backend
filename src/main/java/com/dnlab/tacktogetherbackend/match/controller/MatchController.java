@@ -52,9 +52,9 @@ public class MatchController {
             matchRequest.setMatchedMatchRequestId(matchedMatchRequest.getId());
             matchedMatchRequest.setMatchedMatchRequestId(matchRequest.getId());
 
+            matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
             messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), DESTINATION_URL, matchRequest);
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, matchedMatchRequest);
-            matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
         }
     }
 

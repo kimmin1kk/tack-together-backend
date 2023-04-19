@@ -8,7 +8,6 @@ import com.dnlab.tacktogetherbackend.auth.dto.ResponseRegistration;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
-import com.dnlab.tacktogetherbackend.match.dto.UserResponse;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
@@ -51,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = SpringBootTestConfiguration.class)
-@Transactional
 class AcceptationTest {
 
     @LocalServerPort
@@ -72,7 +70,6 @@ class AcceptationTest {
     private WebSocketStompClient stompClient;
     private StompSession stompSession;
     private BlockingQueue<MatchRequest> matchRequestBlockingQueue;
-    private BlockingQueue<UserResponse> userResponseBlockingQueue;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
     private static final String NAENGJEONG_STA = "129.012175,35.151238";
@@ -190,7 +187,6 @@ class AcceptationTest {
             headers.add("Authorization", "Bearer " + accessToken);
             session.setAutoReceipt(true);
             session.subscribe(headers, new TestStompFrameHandler());
-//            session.subscribe("/user/queue/match", new TestStompFrameHandler());
         }
     }
 
@@ -205,20 +201,6 @@ class AcceptationTest {
         public void handleFrame(StompHeaders stompHeaders, Object o) {
             log.info("Received STOMP frame : " + o);
             matchRequestBlockingQueue.offer((MatchRequest) o);
-        }
-    }
-
-    private class UserAcceptationTestStompFrameHandler implements StompFrameHandler {
-
-        @Override
-        public Type getPayloadType(StompHeaders stompHeaders) {
-            return UserResponse.class;
-        }
-
-        @Override
-        public void handleFrame(StompHeaders stompHeaders, Object o) {
-            log.info("Received STOMP frame : " + o);
-            userResponseBlockingQueue.offer((UserResponse) o);
         }
     }
 }
