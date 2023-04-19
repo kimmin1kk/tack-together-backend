@@ -7,10 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
-public class KakaoMapServiceImpl implements KakaoMapService {
+public class WebFluxKakaoMapServiceImpl implements KakaoMapService {
     private final WebClient webClient;
 
     @Override
@@ -29,9 +29,8 @@ public class KakaoMapServiceImpl implements KakaoMapService {
 
     @Override
     public int getDistance(RequestDirections requestDirections) {
-        return this.getRoute(requestDirections) // ResponseDirections
-                .getRoutes().stream() // List<Route>
-                .findFirst().orElseThrow() // Route
+        return getRoute(requestDirections).getRoutes()
+                .stream().findFirst().orElseThrow()
                 .getSummary().getDistance();
     }
 }

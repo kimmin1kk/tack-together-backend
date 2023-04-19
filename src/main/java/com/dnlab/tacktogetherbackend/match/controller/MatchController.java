@@ -8,7 +8,6 @@ import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -37,6 +36,7 @@ public class MatchController {
     public void handleMatchRequest(MatchRequestDTO matchRequestDTO,
                                    SimpMessageHeaderAccessor headerAccessor,
                                    Principal principal) {
+        log.debug("매칭 요청 수신");
         // DTO 로부터 MatchRequest 객체를 생성하고 맵에 추가
         matchRequestDTO.setUsername(principal.getName());
         final MatchRequest matchRequest = matchService.addMatchRequest(matchRequestDTO);
@@ -52,9 +52,9 @@ public class MatchController {
             matchRequest.setMatchedMatchRequestId(matchedMatchRequest.getId());
             matchedMatchRequest.setMatchedMatchRequestId(matchRequest.getId());
 
+            matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
             messagingTemplate.convertAndSendToUser(matchedMatchRequest.getUsername(), DESTINATION_URL, matchRequest);
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, matchedMatchRequest);
-            matchService.handlePendingMatched(matchRequest, matchedMatchRequest);
         }
     }
 
@@ -62,6 +62,7 @@ public class MatchController {
     @MessageMapping("/match/accept")
     public void handleAccept(@Payload String matchedRequestId, SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
+        log.info(matchRequestId);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getMatchedMatchRequestId()).orElseThrow();
 
@@ -89,7 +90,7 @@ public class MatchController {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
 
-        if (matchRequestId != null) {
+        if (!matchRequestId.isBlank()) {
             matchService.removeRideRequest(matchRequestId);
         }
     }

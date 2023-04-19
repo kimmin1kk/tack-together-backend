@@ -9,6 +9,7 @@ import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
+import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,46 +37,43 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = SpringBootTestConfiguration.class)
-@Transactional
-class WebSocketTest {
-    @Autowired
-    private MatchResultMemberRepository matchResultMemberRepository;
+class AcceptationTest {
 
     @LocalServerPort
     private int port;
-    private URI baseUrl;
 
     @Autowired
     private MatchService matchService;
 
     @Autowired
+    private MatchResultRepository matchResultRepository;
+
+    @Autowired
+    private MatchResultMemberRepository matchResultMemberRepository;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
-    private static String accessToken;
-
-    private String webSocketUrl;
     private WebSocketStompClient stompClient;
-    private SockJsClient sockJsClient;
     private StompSession stompSession;
-    private ListenableFuture<StompSession> future;
-    private BlockingQueue<MatchRequest> blockingQueue;
+    private BlockingQueue<MatchRequest> matchRequestBlockingQueue;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
     private static final String NAENGJEONG_STA = "129.012175,35.151238";
     private static final String HYUNMU_APT_105 = "129.00501,35.1449747"; // 스플과 320m거리
-    private static final String KOR_SHOES_MUSEUM = "129.0258261,35.1573104";
-    private static final String DONGEUI_UNIV_KAYA = "129.0340908,35.1429679";
-
     static final String USERNAME = "testUsername";
     static final String PASSWORD = "testPassword";
 
@@ -87,7 +85,7 @@ class WebSocketTest {
         requestRegistration.setPassword(PASSWORD);
         requestRegistration.setNickname("testNickname");
         restTemplate.postForEntity("/api/auth/signUp", requestRegistration, ResponseRegistration.class);
-        accessToken = Objects.requireNonNull(restTemplate.postForEntity("/api/auth/signIn", new RequestLogin(USERNAME, PASSWORD), ResponseLogin.class)
+        String accessToken = Objects.requireNonNull(restTemplate.postForEntity("/api/auth/signIn", new RequestLogin(USERNAME, PASSWORD), ResponseLogin.class)
                 .getBody()).getAccessToken();
 
         log.info("accessToken : " + accessToken);
@@ -95,22 +93,21 @@ class WebSocketTest {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.afterPropertiesSet();
 
-        sockJsClient = new SockJsClient(Collections.singletonList(new WebSocketTransport(new StandardWebSocketClient())));
+        SockJsClient sockJsClient = new SockJsClient(Collections.singletonList(new WebSocketTransport(new StandardWebSocketClient())));
         stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(taskScheduler);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         stompClient.setDefaultHeartbeat(new long[]{10_000, 10_000}); // 클라이언트 측 하트비트 설정
 
-        baseUrl = URI.create("ws://localhost:" + port);
-        webSocketUrl = baseUrl + "/match" + "?token=" + accessToken;
-
+        URI baseUrl = URI.create("http://localhost:" + port);
+        String webSocketUrl = baseUrl + "/match";
         StompSessionHandler sessionHandler = new TestSessionHandler(accessToken);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
-        future = stompClient.connect(webSocketUrl, headers, sessionHandler);
+        ListenableFuture<StompSession> future = stompClient.connect(webSocketUrl, headers, sessionHandler);
 
         stompSession = future.get(30, TimeUnit.SECONDS);
-        blockingQueue = new LinkedBlockingDeque<>();
+        matchRequestBlockingQueue = new LinkedBlockingDeque<>();
     }
 
     @BeforeEach
@@ -165,7 +162,7 @@ class WebSocketTest {
         log.info("session subscribed, url : " + subscribeUrl);
         stompSession.send("/app/match/request", req);
 
-        MatchRequest receivedReq = blockingQueue.poll(20, TimeUnit.SECONDS);
+        MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
 
         matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
@@ -176,33 +173,6 @@ class WebSocketTest {
 
         // Then
         log.info("MatchResultMember : " + matchResultMember);
-    }
-
-    @Test
-    @Transactional
-    void testWebSocket() throws InterruptedException, ExecutionException, TimeoutException {
-        // 매칭 테스트
-        MatchRequestDTO req = MatchRequestDTO.builder()
-                .origin(STUDENT_PLAZA)
-                .destination(NAENGJEONG_STA)
-                .originRange((short) 0)
-                .destinationRange((short) 0)
-                .build();
-
-        log.info("sending : " + req);
-        log.info("sessionId : " + stompSession.getSessionId());
-        String subscribeUrl = "/user/" + USERNAME + "/queue/match";
-        stompSession.subscribe(subscribeUrl, new TestStompFrameHandler());
-
-        log.info("session subscribed, url : " + subscribeUrl);
-        stompSession.send("/app/match/request", req);
-
-        MatchRequest receivedReq = blockingQueue.poll(20, TimeUnit.SECONDS);
-        log.info("received : " + receivedReq);
-
-        // Then
-        assertNotNull(receivedReq);
-        assertEquals(NAENGJEONG_STA, receivedReq.getDestination());
     }
 
     @RequiredArgsConstructor
@@ -217,7 +187,6 @@ class WebSocketTest {
             headers.add("Authorization", "Bearer " + accessToken);
             session.setAutoReceipt(true);
             session.subscribe(headers, new TestStompFrameHandler());
-//            session.subscribe("/user/queue/match", new TestStompFrameHandler());
         }
     }
 
@@ -231,7 +200,7 @@ class WebSocketTest {
         @Override
         public void handleFrame(StompHeaders stompHeaders, Object o) {
             log.info("Received STOMP frame : " + o);
-            blockingQueue.offer((MatchRequest) o);
+            matchRequestBlockingQueue.offer((MatchRequest) o);
         }
     }
 }

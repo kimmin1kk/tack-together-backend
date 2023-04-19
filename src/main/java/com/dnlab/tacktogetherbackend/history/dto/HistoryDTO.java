@@ -5,21 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.Duration;
 
 
 @Data
 @NoArgsConstructor
-public class HistoryDto {
+public class HistoryDTO {
     private String origin;
     private String destination;
     private Timestamp startTime;
-    private Timestamp rideDuration;
+    private Duration rideDuration;
     private Timestamp endTime;
     private String passengerNickname;
     private String savedCost;
 
     @Builder
-    public HistoryDto(String origin, String destination, Timestamp startTime, Timestamp rideDuration, Timestamp endTime, String passengerNickname, String savedCost) {
+    public HistoryDTO(String origin, String destination, Timestamp startTime, Duration rideDuration, Timestamp endTime, String passengerNickname, String savedCost) {
         this.origin = origin;
         this.destination = destination;
         this.startTime = startTime;

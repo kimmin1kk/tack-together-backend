@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -32,10 +33,15 @@ public class MatchRequest implements Serializable {
     @NotNull
     private short destinationRange;
 
+    private boolean matched = false;
+
     // 매칭 후
     private int distance = 0;
     private String matchedMatchRequestId = null; // 매칭된 상대 요청 아이디
     private MatchDecisionStatus matchDecisionStatus = null;
+
+    // 매칭 정보들 아이디
+    private String tempSessionId;
 
     public MatchRequest(MatchRequestDTO dto) {
         this.id = generateRequestId(dto.getUsername());
@@ -47,6 +53,6 @@ public class MatchRequest implements Serializable {
     }
 
     private String generateRequestId(String username) {
-        return username + "-" + System.currentTimeMillis();
+        return username + "-" + UUID.randomUUID();
     }
 }
