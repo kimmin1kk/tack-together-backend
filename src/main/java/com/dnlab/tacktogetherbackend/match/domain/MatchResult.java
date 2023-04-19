@@ -1,17 +1,20 @@
 package com.dnlab.tacktogetherbackend.match.domain;
 
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Table(name = "match_result")
 @NoArgsConstructor
 public class MatchResult {
@@ -38,7 +41,8 @@ public class MatchResult {
     private int totalFare;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "matchResult")
-    private Set<MatchResultMember> matchResultMembers = new HashSet<>();
+    @ToString.Exclude
+    private Set<MatchResultMember> matchResultMembers = new LinkedHashSet<>();
 
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
@@ -68,5 +72,18 @@ public class MatchResult {
         this.totalFare = totalFare;
         this.matchResultMembers = matchResultMembers;
         this.createTime = createTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        MatchResult that = (MatchResult) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

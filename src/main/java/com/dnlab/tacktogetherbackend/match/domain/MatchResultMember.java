@@ -2,17 +2,19 @@ package com.dnlab.tacktogetherbackend.match.domain;
 
 import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Table(name = "match_result_member")
-@NoArgsConstructor
 public class MatchResultMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +22,7 @@ public class MatchResultMember {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "match_result_id")
+    @ToString.Exclude
     private MatchResult matchResult;
 
     @ManyToOne
@@ -56,5 +59,18 @@ public class MatchResultMember {
         this.distance = distance;
         this.createTime = createTime;
         this.dropOffTime = dropOffTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        MatchResultMember that = (MatchResultMember) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
