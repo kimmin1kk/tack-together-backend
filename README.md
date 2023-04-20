@@ -39,10 +39,6 @@
 
 프로젝트를 실행하기 전에 `src/main/resources` 디렉토리에 `application.yml` 파일을 생성하고 아래와 같은 내용을 작성해주세요.
 ```yaml
-logging:
-  level:
-    root: debug
-
 app:
   redis:
     ttl: 60
@@ -51,7 +47,6 @@ spring:
   redis:
     host: 127.0.0.1
     port: 6379
-    timeout: 5000
 
   datasource:
     url: jdbc:mysql://localhost:3306/tack_together?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=true
@@ -63,11 +58,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
         hbm2ddl:
-          auto: update
+          auto: create-drop
     open-in-view: false
-    show-sql: false
 
 jwt:
   header: Authorization
