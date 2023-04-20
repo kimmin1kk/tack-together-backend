@@ -29,6 +29,66 @@
 
 #### 택투게더는 편리한 택시 이용을 위해 더 나은 선택이 될 것입니다.
 
+## Requirements
++ JDK 11
++ MySQL 8.0 이상
++ Maven
++ Redis
+
+## Settings
+
+프로젝트를 실행하기 전에 `src/main/resources` 디렉토리에 `application.yml` 파일을 생성하고 아래와 같은 내용을 작성해주세요.
+```yaml
+app:
+  redis:
+    ttl: 60
+
+spring:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/tack_together?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: [데이터베이스 비밀번호]
+    username: [데이터베이스 사용자명]
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        hbm2ddl:
+          auto: create-drop
+    open-in-view: false
+
+jwt:
+  header: Authorization
+  secret: [JWT 시크릿 키]
+  access-token-expiration: 3600000
+  refresh-token-expiration: 1209600000
+
+api:
+  kakao:
+    key: [카카오 API 키]
+    mobility-base-url: https://apis-navi.kakaomobility.com/v1/
+
+match:
+  range:
+    origin:
+      narrow: 100
+      normal: 250
+      wide: 500
+    destination:
+      narrow: 500
+      normal: 1000
+      wide: 2000
+```
+'[데이터베이스 비밀번호]', '[데이터베이스 사용자명]', '[JWT 시크릿 키]', '[카카오 API 키]'를 본인의 설정에 맞게 수정해주세요.
+
+이 설정 파일은 Git에 업로드 되지 않도록 .gitignore에 등록되어 있습니다.
+
+
 ## Tech Stack
 
 + Java 11
@@ -37,6 +97,7 @@
 + MySQL
 + hibernate 5.4.24.Final
 + spring-security-jwt 1.1.1
++ Redis
 + jackson.core 2.10.3
 + geodesy 1.1.3
 + Lombok 1.18.12
