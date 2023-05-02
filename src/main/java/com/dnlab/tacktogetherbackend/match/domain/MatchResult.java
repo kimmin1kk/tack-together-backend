@@ -16,7 +16,6 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @Table(name = "match_result")
-@NoArgsConstructor
 public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

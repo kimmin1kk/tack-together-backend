@@ -6,6 +6,7 @@ import com.dnlab.tacktogetherbackend.auth.dto.RequestRegistration;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseLogin;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseRegistration;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
+import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
@@ -38,12 +39,10 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
@@ -66,10 +65,10 @@ class AcceptationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
     private WebSocketStompClient stompClient;
     private StompSession stompSession;
     private BlockingQueue<MatchRequest> matchRequestBlockingQueue;
+    private MatchResult matchResult;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
     private static final String NAENGJEONG_STA = "129.012175,35.151238";
@@ -119,22 +118,6 @@ class AcceptationTest {
                 .originRange((short) 0)
                 .destinationRange((short) 0)
                 .build());
-
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("user2")
-                .origin(STUDENT_PLAZA)
-                .destination(NAENGJEONG_STA)
-                .originRange((short) 0)
-                .destinationRange((short) 0)
-                .build());
-
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
-                .username("user3")
-                .origin(HYUNMU_APT_105)
-                .destination(NAENGJEONG_STA)
-                .originRange((short) 0)
-                .destinationRange((short) 0)
-                .build());
     }
 
     @AfterEach
@@ -144,9 +127,8 @@ class AcceptationTest {
     }
 
     @Test
-    @Transactional
     void testAcceptation() throws InterruptedException, ExecutionException, TimeoutException {
-        // 매칭 테스트
+        // 매칭 성공 테스트
         MatchRequestDTO req = MatchRequestDTO.builder()
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -165,14 +147,42 @@ class AcceptationTest {
         MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
 
-        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
+        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow()); //상대방 수락
 
-        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId());
+        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
 
-        List<MatchResultMember> matchResultMember = matchResultMemberRepository.findMatchResultMembersByMemberUsername(USERNAME);
+        // FIXME: 2023-05-03 DB에 저장은 되나 저장되기 전에 조회를 해버려서 테스트에 실패하는 중 이 부분에 타임아웃을 걸어줄 방법 필요
+
+        // FIXME: 2023-05-03 해당 유저랑 관련된 모든 매칭 정보들을 조회 -> 테스트 신뢰도 하락
+        MatchResultMember matchResultMember = matchResultMemberRepository.findMatchResultMembersByMemberUsername(USERNAME).stream()
+                .findFirst()
+                .orElseThrow();
+
+        MatchResultMember opponentMatchResultMember = matchResultMemberRepository.findMatchResultMembersByMatchResult(matchResultMember.getMatchResult())
+                .stream()
+                .filter(m -> !m.equals(matchResultMember))
+                .findFirst()
+                .orElseThrow();
+
+
+
+        assertThat(opponentMatchResultMember.getMember().getUsername()).isEqualTo("user1");
+
 
         // Then
         log.info("MatchResultMember : " + matchResultMember);
+    }
+
+    @Test
+    @Transactional
+    void testNonAcception() throws InterruptedException, ExecutionException, TimeoutException {
+        //매칭 실패 테스트
+        MatchRequestDTO req = MatchRequestDTO.builder()
+                .origin(STUDENT_PLAZA)
+                .destination(NAENGJEONG_STA)
+                .originRange((short) 0)
+                .destinationRange((short) 0)
+                .build();
     }
 
     @RequiredArgsConstructor
