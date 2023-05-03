@@ -80,8 +80,13 @@ public class MatchController {
     public void handleReject(@Payload String matchedRequestId, SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
+        MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getMatchedMatchRequestId()).orElseThrow();
 
         matchService.rejectMatch(matchRequest);
+
+        UserResponse response = new UserResponse(MatchDecisionStatus.REJECTED.toString());
+        messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, response);
+        messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, response);
     }
 
     // WebSocket 연결 해제 처리

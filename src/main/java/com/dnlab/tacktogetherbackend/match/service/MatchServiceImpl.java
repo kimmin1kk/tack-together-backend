@@ -63,12 +63,12 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public MatchRequest findMatchingMatchRequests(MatchRequest matchRequest) {
-        log.info("finding MatchReq");
+        log.info("finding MatchRequest");
         // 매칭 로직 구현
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
                 .filter(key -> !key.equals(matchRequest.getId()))
                 .map(activeMatchRequests::get)
-                .filter(req -> isSuitableRequests(matchRequest, req))
+                .filter(req -> (req.getMatchDecisionStatus() == null && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
 
         return suitableRequests.stream()
@@ -146,6 +146,16 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public void rejectMatch(MatchRequest matchRequest) {
         // 매칭 거절 로직
+        matchRequest.setMatchDecisionStatus(MatchDecisionStatus.REJECTED);
+        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getMatchedMatchRequestId());
+
+        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.REJECTED)) { // 동시 요청 시 무시
+            return;
+        }
+
+        matchRequest.setMatchDecisionStatus(null);
+        matchedRequest.setMatchDecisionStatus(null);
+        temporaryMatchInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
     }
 
     @Override
@@ -232,9 +242,9 @@ public class MatchServiceImpl implements MatchService {
                 .matchResult(matchResult)
                 .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
                 .build());
-    }
 
-    private void handleRejected(MatchRequest m1, MatchRequest m2) {
-
+        activeMatchRequests.remove(fartherReq.getId());
+        activeMatchRequests.remove(nearerReq.getId());
+        temporaryMatchInfoRepository.delete(matchInfo);
     }
 }
