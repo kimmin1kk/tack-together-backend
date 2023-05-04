@@ -39,7 +39,7 @@ public class MatchResult {
     @Column(name = "total_fare", nullable = false)
     private int totalFare;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "matchResult")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "matchResult")
     @ToString.Exclude
     private Set<MatchResultMember> matchResultMembers = new LinkedHashSet<>();
 

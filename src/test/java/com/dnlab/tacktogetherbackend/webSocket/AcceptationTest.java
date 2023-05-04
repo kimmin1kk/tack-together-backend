@@ -39,6 +39,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 
@@ -151,20 +152,17 @@ class AcceptationTest {
 
         stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
 
-        // FIXME: 2023-05-03 DB에 저장은 되나 저장되기 전에 조회를 해버려서 테스트에 실패하는 중 이 부분에 타임아웃을 걸어줄 방법 필요
+        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchResult matchResult = recentMatchResults.get(0);
 
-        // FIXME: 2023-05-03 해당 유저랑 관련된 모든 매칭 정보들을 조회 -> 테스트 신뢰도 하락
-        MatchResultMember matchResultMember = matchResultMemberRepository.findMatchResultMembersByMemberUsername(USERNAME).stream()
+        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-
-        MatchResultMember opponentMatchResultMember = matchResultMemberRepository.findMatchResultMembersByMatchResult(matchResultMember.getMatchResult())
-                .stream()
-                .filter(m -> !m.equals(matchResultMember))
+        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> !m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-
-
 
         assertThat(opponentMatchResultMember.getMember().getUsername()).isEqualTo("user1");
 
@@ -175,7 +173,7 @@ class AcceptationTest {
 
     @Test
     @Transactional
-    void testNonAcception() throws InterruptedException, ExecutionException, TimeoutException {
+    void testReject() throws InterruptedException, ExecutionException, TimeoutException { //미구현
         //매칭 실패 테스트
         MatchRequestDTO req = MatchRequestDTO.builder()
                 .origin(STUDENT_PLAZA)
@@ -183,6 +181,38 @@ class AcceptationTest {
                 .originRange((short) 0)
                 .destinationRange((short) 0)
                 .build();
+
+        log.info("sending : " + req);
+        log.info("sessionId : " + stompSession.getSessionId());
+        String subscribeUrl = "/user/" + USERNAME + "/queue/match";
+        stompSession.subscribe(subscribeUrl, new TestStompFrameHandler());
+
+        log.info("session subscribed, url : " + subscribeUrl);
+        stompSession.send("/app/match/request", req);
+
+        MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
+        log.info("received : " + receivedReq);
+
+        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow()); //상대방 거절
+
+        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
+
+        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchResult matchResult = recentMatchResults.get(0);
+
+        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> m.getMember().getUsername().equals(USERNAME))
+                .findFirst()
+                .orElseThrow();
+        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> !m.getMember().getUsername().equals(USERNAME))
+                .findFirst()
+                .orElseThrow();
+
+//        assertThat(opponentMatchResultMember.getMember().getUsername()).isNotEqualTo("user1");
+
+        // Then
+        log.info("MatchResultMember : " + matchResultMember);
     }
 
     @RequiredArgsConstructor
