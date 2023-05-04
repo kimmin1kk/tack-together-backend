@@ -52,7 +52,6 @@ public class MatchResult {
     }
 
     @Builder
-
     public MatchResult(Long id,
                        String origin,
                        String destination,
