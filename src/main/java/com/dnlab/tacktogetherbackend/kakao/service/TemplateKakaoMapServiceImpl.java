@@ -39,11 +39,4 @@ public class TemplateKakaoMapServiceImpl implements KakaoMapService {
 
         return response.getBody();
     }
-
-    @Override
-    public int getDistance(RequestDirections requestDirections) {
-        return getRoute(requestDirections).getRoutes()
-                .stream().findFirst().orElseThrow()
-                .getSummary().getDistance();
-    }
 }

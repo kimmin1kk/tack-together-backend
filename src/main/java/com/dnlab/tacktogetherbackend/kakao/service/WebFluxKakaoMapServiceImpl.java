@@ -26,11 +26,4 @@ public class WebFluxKakaoMapServiceImpl implements KakaoMapService {
                 .bodyToMono(ResponseDirections.class)
                 .block();
     }
-
-    @Override
-    public int getDistance(RequestDirections requestDirections) {
-        return getRoute(requestDirections).getRoutes()
-                .stream().findFirst().orElseThrow()
-                .getSummary().getDistance();
-    }
 }
