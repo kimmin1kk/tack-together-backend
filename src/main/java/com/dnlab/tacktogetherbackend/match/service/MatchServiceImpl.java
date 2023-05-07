@@ -3,15 +3,15 @@ package com.dnlab.tacktogetherbackend.match.service;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.global.common.RedisEntityProperties;
 import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
+import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.ResponseDirections;
 import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
-import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
-import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
-import com.dnlab.tacktogetherbackend.match.common.RangeKind;
+import com.dnlab.tacktogetherbackend.match.common.*;
 import com.dnlab.tacktogetherbackend.match.config.MatchRangeProperties;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.domain.TemporaryMatchInfo;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchInfoRepository;
@@ -41,14 +41,15 @@ public class MatchServiceImpl implements MatchService {
     private final KakaoMapService kakaoMapService;
     private final MatchRangeProperties matchRangeProperties;
     private final RedisEntityProperties redisProperties;
+    private final TaxiFareCalculator taxiFareCalculator;
 
     @Override
-    public MatchRequest addMatchRequest(MatchRequestDTO matchRequestDTO) {
+    public String addMatchRequest(MatchRequestDTO matchRequestDTO) {
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
         log.info("MatchRequest is added, " + matchRequest);
-        return matchRequest;
+        return matchRequest.getId();
     }
 
     @Override
@@ -62,22 +63,34 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public MatchRequest findMatchingMatchRequests(MatchRequest matchRequest) {
-        log.info("finding MatchReq");
+    public String findMatchingMatchRequests(String matchRequestId) {
+        MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
+        log.info("finding MatchRequest");
         // 매칭 로직 구현
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
-                .filter(key -> !key.equals(matchRequest.getId()))
+                .filter(key -> !key.equals(matchRequestId))
                 .map(activeMatchRequests::get)
-                .filter(req -> isSuitableRequests(matchRequest, req))
+                .filter(req -> (req.getMatchDecisionStatus() == null && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
 
-        return suitableRequests.stream()
+        MatchRequest opponentMatchRequest = suitableRequests.stream()
                 .findFirst()
                 .orElse(null);
+
+        if (opponentMatchRequest == null) {
+            return null;
+        }
+
+        matchRequest.setOpponentMatchRequestId(opponentMatchRequest.getId());
+        opponentMatchRequest.setOpponentMatchRequestId(matchRequest.getId());
+        log.info("matched match request info : " + opponentMatchRequest);
+        return opponentMatchRequest.getId();
     }
 
     @Override
-    public void handlePendingMatched(MatchRequest matchRequest, MatchRequest matchedMatchRequest) {
+    public Map<String, MatchResultInfoDTO> getMatchResultInfos(String matchRequestId, String matchedMatchRequestId) {
+        MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
+        MatchRequest matchedMatchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         log.debug("handlePendingMatched 메소드가 호출되었습니다.");
         // 매칭이 성사된 후 대기 상태를 처리
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
@@ -87,6 +100,18 @@ public class MatchServiceImpl implements MatchService {
         String sessionId = UUID.randomUUID().toString();
         matchRequest.setTempSessionId(sessionId);
         matchedMatchRequest.setTempSessionId(sessionId);
+
+        ResponseDirections directionCase1 = kakaoMapService.getRoute(RequestDirections.builder()
+                .origin(matchRequest.getOrigin())
+                .destination(matchRequest.getDestination())
+                .waypoints(matchedMatchRequest.getDestination())
+                .build());
+
+        ResponseDirections directionCase2 = kakaoMapService.getRoute(RequestDirections.builder()
+                .origin(matchedMatchRequest.getOrigin())
+                .destination(matchedMatchRequest.getDestination())
+                .waypoints(matchRequest.getDestination())
+                .build());
 
         int distance1 = kakaoMapService.getDistance(RequestDirections.builder()
                 .origin(matchRequest.getOrigin())
@@ -100,15 +125,18 @@ public class MatchServiceImpl implements MatchService {
                 .waypoints(matchRequest.getDestination())
                 .build());
 
-        MatchRequest fartherRequest;
-        MatchRequest nearerRequest;
+        MatchRequest fartherRequest = null;
+        MatchRequest nearerRequest = null;
+        ResponseDirections fixedDirections = null;
 
         if (distance1 > distance2) {
             fartherRequest = matchedMatchRequest;
             nearerRequest = matchRequest;
+            fixedDirections = directionCase2;
         } else {
             fartherRequest = matchRequest;
             nearerRequest = matchedMatchRequest;
+            fixedDirections = directionCase1;
         }
 
         TemporaryMatchInfo temporaryMatchInfo = TemporaryMatchInfo.builder()
@@ -118,22 +146,56 @@ public class MatchServiceImpl implements MatchService {
                 .waypoints(nearerRequest.getDestination())
                 .destinationDistance(Math.min(distance1, distance2))
                 .waypointDistance(kakaoMapService.getDistance(RequestDirections.ofMatchRequest(nearerRequest)))
-                .destinationMatchRequestId(fartherRequest.getMatchedMatchRequestId())
-                .waypointMatchRequestId(nearerRequest.getMatchedMatchRequestId())
+                .destinationMatchRequestId(fartherRequest.getOpponentMatchRequestId())
+                .waypointMatchRequestId(nearerRequest.getOpponentMatchRequestId())
                 .expiredTime(redisProperties.getTtl())
                 .build();
 
         log.debug("Before Saving TemporaryMatchInfo : " + temporaryMatchInfo);
         TemporaryMatchInfo savedTemporaryMatchInfo = temporaryMatchInfoRepository.save(temporaryMatchInfo);
         log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchInfo);
+
+        Map<String, MatchResultInfoDTO> infoDTOMap = new HashMap<>();
+        int totalFare = fixedDirections.getRoutes()
+                .stream().findFirst().orElseThrow()
+                .getSummary()
+                .getFare()
+                .getTaxi();
+        TaxiFares taxiFares = taxiFareCalculator.calculateFare(totalFare,
+                temporaryMatchInfo.getWaypointDistance(),
+                temporaryMatchInfo.getDestinationDistance());
+        PaymentRate paymentRate = taxiFareCalculator.calculatePaymentRate(taxiFares);
+        infoDTOMap.put(nearerRequest.getId(),
+                MatchResultInfoDTO.builder()
+                        .username(nearerRequest.getUsername())
+                        .opponentUsername(fartherRequest.getUsername())
+                        .routes(fixedDirections.getRoutes())
+                        .estimatedTotalTaxiFare(totalFare)
+                        .estimatedTaxiFare(taxiFares.getWaypointFare())
+                        .paymentRate(paymentRate.getWaypointRate())
+                        .opponentPaymentRate(paymentRate.getDestinationRate())
+                        .build());
+        infoDTOMap.put(fartherRequest.getId(),
+                MatchResultInfoDTO.builder()
+                        .username(fartherRequest.getUsername())
+                        .opponentUsername(nearerRequest.getUsername())
+                        .routes(fixedDirections.getRoutes())
+                        .estimatedTotalTaxiFare(totalFare)
+                        .estimatedTaxiFare(taxiFares.getDestinationFare())
+                        .paymentRate(paymentRate.getDestinationRate())
+                        .opponentPaymentRate(paymentRate.getWaypointRate())
+                        .build());
+
+        return infoDTOMap;
     }
 
     // 매칭 수락 로직
     @Override
     @Transactional
-    public MatchDecisionStatus acceptMatch(MatchRequest matchRequest) {
+    public MatchDecisionStatus acceptMatch(String matchRequestId) {
+        MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
-        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getMatchedMatchRequestId());
+        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
 
         if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
             handleAcceptedMatchedRequests(matchedRequest.getTempSessionId());
@@ -144,8 +206,19 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public void rejectMatch(MatchRequest matchRequest) {
+    public void rejectMatch(String matchRequestId) {
         // 매칭 거절 로직
+        MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
+        matchRequest.setMatchDecisionStatus(MatchDecisionStatus.REJECTED);
+        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
+
+        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.REJECTED)) { // 동시 요청 시 무시
+            return;
+        }
+
+        matchRequest.setMatchDecisionStatus(null);
+        matchedRequest.setMatchDecisionStatus(null);
+        temporaryMatchInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
     }
 
     @Override
@@ -232,9 +305,11 @@ public class MatchServiceImpl implements MatchService {
                 .matchResult(matchResult)
                 .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
                 .build());
+
+        activeMatchRequests.remove(fartherReq.getId());
+        activeMatchRequests.remove(nearerReq.getId());
+        temporaryMatchInfoRepository.delete(matchInfo);
     }
 
-    private void handleRejected(MatchRequest m1, MatchRequest m2) {
 
-    }
 }

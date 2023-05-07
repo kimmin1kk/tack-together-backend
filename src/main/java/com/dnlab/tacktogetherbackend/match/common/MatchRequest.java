@@ -37,7 +37,7 @@ public class MatchRequest implements Serializable {
 
     // 매칭 후
     private int distance = 0;
-    private String matchedMatchRequestId = null; // 매칭된 상대 요청 아이디
+    private String opponentMatchRequestId = null; // 매칭된 상대 요청 아이디
     private MatchDecisionStatus matchDecisionStatus = null;
 
     // 매칭 정보들 아이디

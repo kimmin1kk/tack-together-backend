@@ -4,4 +4,5 @@ import com.dnlab.tacktogetherbackend.match.domain.TemporaryMatchInfo;
 import org.springframework.data.repository.CrudRepository;
 
 public interface TemporaryMatchInfoRepository extends CrudRepository<TemporaryMatchInfo, String> {
+    TemporaryMatchInfo deleteBySessionId(String sessionId);
 }

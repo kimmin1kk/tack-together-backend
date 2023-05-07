@@ -2,15 +2,18 @@ package com.dnlab.tacktogetherbackend.match.config;
 
 import com.dnlab.tacktogetherbackend.match.common.RangeKind;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "match.range")
-@Data
+@Getter
+@RequiredArgsConstructor
 public class MatchRangeProperties {
-    private Range origin;
-    private Range destination;
+    private final Range origin;
+    private final Range destination;
 
     public int convertRangeLevelToRange(short rangeLevel, RangeKind rangeKind) {
         switch (rangeKind) {
