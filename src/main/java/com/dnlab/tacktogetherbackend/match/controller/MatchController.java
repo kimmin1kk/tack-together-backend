@@ -55,7 +55,7 @@ public class MatchController {
 
             // 매칭 결과를 각각 전송
             messagingTemplate.convertAndSendToUser(resultInfoDTOMap.get(opponentMatchRequestId).getUsername(), DESTINATION_URL, resultInfoDTOMap.get(opponentMatchRequestId));
-            messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, resultInfoDTOMap.get(opponentMatchRequestId));
+            messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, resultInfoDTOMap.get(matchRequestId));
         }
     }
 
