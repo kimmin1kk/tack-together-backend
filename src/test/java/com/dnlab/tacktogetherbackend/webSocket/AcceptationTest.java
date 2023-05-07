@@ -9,6 +9,7 @@ import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
@@ -68,7 +69,7 @@ class AcceptationTest {
     private TestRestTemplate restTemplate;
     private WebSocketStompClient stompClient;
     private StompSession stompSession;
-    private BlockingQueue<MatchRequest> matchRequestBlockingQueue;
+    private BlockingQueue<MatchResultInfoDTO> matchRequestBlockingQueue;
     private MatchResult matchResult;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
@@ -112,7 +113,7 @@ class AcceptationTest {
 
     @BeforeEach
     void setMatchRequests() {
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("user1")
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -144,13 +145,19 @@ class AcceptationTest {
 
         log.info("session subscribed, url : " + subscribeUrl);
         stompSession.send("/app/match/request", req);
-
-        MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
+        //매칭 돌리는 중
+        MatchResultInfoDTO receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
+        stompSession.getSessionId();
 
-        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow()); //상대방 수락
+//        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
 
-        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
+        matchService.acceptMatch(receivedReq.getOpponentMatchRequestId()); //상대방 수락
+
+        stompSession.send("/app/match/accept", matchService.acceptMatch(receivedReq.getId())); //수락 다시 짜야됨
+
+//        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId());
+
 
         List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
         MatchResult matchResult = recentMatchResults.get(0);
@@ -190,12 +197,11 @@ class AcceptationTest {
         log.info("session subscribed, url : " + subscribeUrl);
         stompSession.send("/app/match/request", req);
 
-        MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
+        MatchResultInfoDTO receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
 
-        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow()); //상대방 거절
-
-        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
+        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId());
+        stompSession.send("/app/match/accept", receivedReq.getOpponentMatchRequestId()); //수락
 
         List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
         MatchResult matchResult = recentMatchResults.get(0);
@@ -234,13 +240,13 @@ class AcceptationTest {
 
         @Override
         public Type getPayloadType(StompHeaders stompHeaders) {
-            return MatchRequest.class;
+            return MatchResultInfoDTO.class;
         }
 
         @Override
         public void handleFrame(StompHeaders stompHeaders, Object o) {
             log.info("Received STOMP frame : " + o);
-            matchRequestBlockingQueue.offer((MatchRequest) o);
+            matchRequestBlockingQueue.offer((MatchResultInfoDTO) o);
         }
     }
 }
