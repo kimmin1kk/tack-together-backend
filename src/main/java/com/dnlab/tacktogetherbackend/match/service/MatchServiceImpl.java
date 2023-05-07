@@ -70,7 +70,7 @@ public class MatchServiceImpl implements MatchService {
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
                 .filter(key -> !key.equals(matchRequestId))
                 .map(activeMatchRequests::get)
-                .filter(req -> (req.getMatchDecisionStatus() == null && isSuitableRequests(matchRequest, req)))
+                .filter(req -> (!req.isMatched() && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
 
         MatchRequest opponentMatchRequest = suitableRequests.stream()
@@ -81,47 +81,52 @@ public class MatchServiceImpl implements MatchService {
             return null;
         }
 
-        matchRequest.setOpponentMatchRequestId(opponentMatchRequest.getId());
-        opponentMatchRequest.setOpponentMatchRequestId(matchRequest.getId());
         log.info("matched match request info : " + opponentMatchRequest);
         return opponentMatchRequest.getId();
     }
 
     @Override
-    public Map<String, MatchResultInfoDTO> getMatchResultInfos(String matchRequestId, String matchedMatchRequestId) {
+    public Map<String, MatchResultInfoDTO> handlePendingMatchedAndGetMatchResultInfos(String matchRequestId, String opponentMatchRequestId) {
+        log.debug("handlePendingMatchedAndGetMatchResultInfos 메소드가 호출되었습니다.");
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
-        MatchRequest matchedMatchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
-        log.debug("handlePendingMatched 메소드가 호출되었습니다.");
-        // 매칭이 성사된 후 대기 상태를 처리
+        MatchRequest opponentMatchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
+
+        // MatchRequest 들을 각각 매칭 된 상태로 변경
+        matchRequest.setMatched(true);
+        matchRequest.setOpponentMatchRequestId(opponentMatchRequest.getId());
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
-        matchedMatchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
+
+        opponentMatchRequest.setMatched(true);
+        opponentMatchRequest.setOpponentMatchRequestId(matchRequest.getId());
+        opponentMatchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
 
         // 임시 매칭 정보를 Redis 에 저장
         String sessionId = UUID.randomUUID().toString();
         matchRequest.setTempSessionId(sessionId);
-        matchedMatchRequest.setTempSessionId(sessionId);
+        opponentMatchRequest.setTempSessionId(sessionId);
 
+        // 두 경로 중 거리가 더 가까운 경로를 세션에 저장
         ResponseDirections directionCase1 = kakaoMapService.getRoute(RequestDirections.builder()
                 .origin(matchRequest.getOrigin())
                 .destination(matchRequest.getDestination())
-                .waypoints(matchedMatchRequest.getDestination())
+                .waypoints(opponentMatchRequest.getDestination())
                 .build());
 
         ResponseDirections directionCase2 = kakaoMapService.getRoute(RequestDirections.builder()
-                .origin(matchedMatchRequest.getOrigin())
-                .destination(matchedMatchRequest.getDestination())
+                .origin(opponentMatchRequest.getOrigin())
+                .destination(opponentMatchRequest.getDestination())
                 .waypoints(matchRequest.getDestination())
                 .build());
 
         int distance1 = kakaoMapService.getDistance(RequestDirections.builder()
                 .origin(matchRequest.getOrigin())
                 .destination(matchRequest.getDestination())
-                .waypoints(matchedMatchRequest.getDestination())
+                .waypoints(opponentMatchRequest.getDestination())
                 .build());
 
         int distance2 = kakaoMapService.getDistance(RequestDirections.builder()
-                .origin(matchedMatchRequest.getOrigin())
-                .destination(matchedMatchRequest.getDestination())
+                .origin(opponentMatchRequest.getOrigin())
+                .destination(opponentMatchRequest.getDestination())
                 .waypoints(matchRequest.getDestination())
                 .build());
 
@@ -129,13 +134,14 @@ public class MatchServiceImpl implements MatchService {
         MatchRequest nearerRequest = null;
         ResponseDirections fixedDirections = null;
 
+        // 서로를 경유지로 설정했을 경우 어느 경로가 더 짧은가 비교
         if (distance1 > distance2) {
-            fartherRequest = matchedMatchRequest;
+            fartherRequest = opponentMatchRequest;
             nearerRequest = matchRequest;
             fixedDirections = directionCase2;
         } else {
             fartherRequest = matchRequest;
-            nearerRequest = matchedMatchRequest;
+            nearerRequest = opponentMatchRequest;
             fixedDirections = directionCase1;
         }
 
@@ -156,6 +162,8 @@ public class MatchServiceImpl implements MatchService {
         log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchInfo);
 
         Map<String, MatchResultInfoDTO> infoDTOMap = new HashMap<>();
+
+        // 택시 비용 계산
         int totalFare = fixedDirections.getRoutes()
                 .stream().findFirst().orElseThrow()
                 .getSummary()
@@ -165,6 +173,8 @@ public class MatchServiceImpl implements MatchService {
                 temporaryMatchInfo.getWaypointDistance(),
                 temporaryMatchInfo.getDestinationDistance());
         PaymentRate paymentRate = taxiFareCalculator.calculatePaymentRate(taxiFares);
+
+        // 각 사용자의 매칭 정보를 Map 에 삽입 후 반환
         infoDTOMap.put(nearerRequest.getId(),
                 MatchResultInfoDTO.builder()
                         .username(nearerRequest.getUsername())
@@ -212,11 +222,9 @@ public class MatchServiceImpl implements MatchService {
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.REJECTED);
         MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
 
-        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.REJECTED)) { // 동시 요청 시 무시
-            return;
-        }
-
+        matchRequest.setMatched(false);
         matchRequest.setMatchDecisionStatus(null);
+        matchedRequest.setMatched(false);
         matchedRequest.setMatchDecisionStatus(null);
         temporaryMatchInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
     }

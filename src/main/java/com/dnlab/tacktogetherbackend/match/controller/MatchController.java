@@ -51,7 +51,7 @@ public class MatchController {
             log.info("Match Succeed!");
 
             // 매칭 결과 생성
-            Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.getMatchResultInfos(matchRequestId, opponentMatchRequestId);
+            Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.handlePendingMatchedAndGetMatchResultInfos(matchRequestId, opponentMatchRequestId);
 
             // 매칭 결과를 각각 전송
             messagingTemplate.convertAndSendToUser(resultInfoDTOMap.get(opponentMatchRequestId).getUsername(), DESTINATION_URL, resultInfoDTOMap.get(opponentMatchRequestId));
