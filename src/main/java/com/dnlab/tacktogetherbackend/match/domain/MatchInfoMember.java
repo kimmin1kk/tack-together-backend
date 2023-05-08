@@ -14,16 +14,16 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Table(name = "match_result_member")
-public class MatchResultMember {
+@Table(name = "match_info_member")
+public class MatchInfoMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "match_result_id")
+    @JoinColumn(name = "match_info_id")
     @ToString.Exclude
-    private MatchResult matchResult;
+    private MatchInfo matchInfo;
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
@@ -50,9 +50,9 @@ public class MatchResultMember {
     }
 
     @Builder
-    public MatchResultMember(Long id, MatchResult matchResult, Member member, String destination, int paymentAmount, int distance, Timestamp createTime, Timestamp dropOffTime) {
+    public MatchInfoMember(Long id, MatchInfo matchInfo, Member member, String destination, int paymentAmount, int distance, Timestamp createTime, Timestamp dropOffTime) {
         this.id = id;
-        this.matchResult = matchResult;
+        this.matchInfo = matchInfo;
         this.member = member;
         this.destination = destination;
         this.paymentAmount = paymentAmount;
@@ -65,7 +65,7 @@ public class MatchResultMember {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        MatchResultMember that = (MatchResultMember) o;
+        MatchInfoMember that = (MatchInfoMember) o;
         return getId() != null && Objects.equals(getId(), that.getId());
     }
 

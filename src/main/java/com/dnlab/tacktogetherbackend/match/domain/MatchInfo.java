@@ -15,8 +15,8 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Table(name = "match_result")
-public class MatchResult {
+@Table(name = "match_info")
+public class MatchInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,12 +36,16 @@ public class MatchResult {
     @Column(name = "match_end_time")
     private Timestamp matchEndTime;
 
-    @Column(name = "total_fare", nullable = false)
-    private int totalFare;
+    @Column(name = "total_fare")
+    private Integer totalFare;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "matchResult")
+    @Column(name = "status", length = 45)
+    @Enumerated(EnumType.STRING)
+    private RidingStatus status;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "matchInfo")
     @ToString.Exclude
-    private Set<MatchResultMember> matchResultMembers = new LinkedHashSet<>();
+    private Set<MatchInfoMember> matchInfoMembers = new LinkedHashSet<>();
 
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
@@ -52,27 +56,29 @@ public class MatchResult {
     }
 
     @Builder
-    public MatchResult(String origin,
-                       String destination,
-                       String waypoints,
-                       int totalDistance,
-                       Timestamp matchEndTime,
-                       int totalFare,
-                       Set<MatchResultMember> matchResultMembers) {
+    public MatchInfo(String origin,
+                     String destination,
+                     String waypoints,
+                     int totalDistance,
+                     Timestamp matchEndTime,
+                     int totalFare,
+                     RidingStatus status,
+                     Set<MatchInfoMember> matchInfoMembers) {
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
         this.totalDistance = totalDistance;
         this.matchEndTime = matchEndTime;
         this.totalFare = totalFare;
-        this.matchResultMembers = matchResultMembers;
+        this.status = status;
+        this.matchInfoMembers = matchInfoMembers;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        MatchResult that = (MatchResult) o;
+        MatchInfo that = (MatchInfo) o;
         return getId() != null && Objects.equals(getId(), that.getId());
     }
 
