@@ -52,16 +52,13 @@ public class MatchResult {
     }
 
     @Builder
-    public MatchResult(Long id,
-                       String origin,
+    public MatchResult(String origin,
                        String destination,
                        String waypoints,
                        int totalDistance,
                        Timestamp matchEndTime,
                        int totalFare,
-                       Set<MatchResultMember> matchResultMembers,
-                       Timestamp createTime) {
-        this.id = id;
+                       Set<MatchResultMember> matchResultMembers) {
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
@@ -69,7 +66,6 @@ public class MatchResult {
         this.matchEndTime = matchEndTime;
         this.totalFare = totalFare;
         this.matchResultMembers = matchResultMembers;
-        this.createTime = createTime;
     }
 
     @Override
