@@ -1,4 +1,4 @@
-package com.dnlab.tacktogetherbackend.match.domain;
+package com.dnlab.tacktogetherbackend.match.domain.redis;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +11,8 @@ import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
-@RedisHash(value = "temporaryMatchInfo")
-public class TemporaryMatchInfo implements Serializable {
+@RedisHash(value = "temporaryMatchSessionInfo")
+public class TemporaryMatchSessionInfo implements Serializable {
     @Id
     private String sessionId;
 
@@ -38,7 +38,7 @@ public class TemporaryMatchInfo implements Serializable {
     private int expiredTime;
 
     @Builder
-    public TemporaryMatchInfo(String sessionId, String origin, String destination, String waypoints, int destinationDistance, int waypointDistance, String destinationMatchRequestId, String waypointMatchRequestId, int expiredTime) {
+    public TemporaryMatchSessionInfo(String sessionId, String origin, String destination, String waypoints, int destinationDistance, int waypointDistance, String destinationMatchRequestId, String waypointMatchRequestId, int expiredTime) {
         this.sessionId = sessionId;
         this.origin = origin;
         this.destination = destination;
