@@ -7,13 +7,14 @@ import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.Response
 import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
 import com.dnlab.tacktogetherbackend.match.common.*;
 import com.dnlab.tacktogetherbackend.match.config.MatchRangeProperties;
-import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
-import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
-import com.dnlab.tacktogetherbackend.match.domain.TemporaryMatchInfo;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
+import com.dnlab.tacktogetherbackend.match.domain.RidingStatus;
+import com.dnlab.tacktogetherbackend.match.domain.redis.TemporaryMatchSessionInfo;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
-import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
-import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
+import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
+import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
 import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,8 @@ public class MatchServiceImpl implements MatchService {
     private final TemporaryMatchInfoRepository temporaryMatchInfoRepository;
     private final Map<String, MatchRequest> activeMatchRequests = new ConcurrentHashMap<>();
 
-    private final MatchResultRepository matchResultRepository;
-    private final MatchResultMemberRepository matchResultMemberRepository;
+    private final MatchInfoRepository matchInfoRepository;
+    private final MatchInfoMemberRepository matchInfoMemberRepository;
     private final KakaoMapService kakaoMapService;
     private final MatchRangeProperties matchRangeProperties;
     private final RedisEntityProperties redisProperties;
@@ -145,7 +146,7 @@ public class MatchServiceImpl implements MatchService {
             fixedDirections = directionCase1;
         }
 
-        TemporaryMatchInfo temporaryMatchInfo = TemporaryMatchInfo.builder()
+        TemporaryMatchSessionInfo temporaryMatchSessionInfo = TemporaryMatchSessionInfo.builder()
                 .sessionId(sessionId)
                 .origin(fartherRequest.getOrigin())
                 .destination(fartherRequest.getDestination())
@@ -157,9 +158,9 @@ public class MatchServiceImpl implements MatchService {
                 .expiredTime(redisProperties.getTtl())
                 .build();
 
-        log.debug("Before Saving TemporaryMatchInfo : " + temporaryMatchInfo);
-        TemporaryMatchInfo savedTemporaryMatchInfo = temporaryMatchInfoRepository.save(temporaryMatchInfo);
-        log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchInfo);
+        log.debug("Before Saving TemporaryMatchInfo : " + temporaryMatchSessionInfo);
+        TemporaryMatchSessionInfo savedTemporaryMatchSessionInfo = temporaryMatchInfoRepository.save(temporaryMatchSessionInfo);
+        log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchSessionInfo);
 
         Map<String, MatchResultInfoDTO> infoDTOMap = new HashMap<>();
 
@@ -170,8 +171,8 @@ public class MatchServiceImpl implements MatchService {
                 .getFare()
                 .getTaxi();
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(totalFare,
-                temporaryMatchInfo.getWaypointDistance(),
-                temporaryMatchInfo.getDestinationDistance());
+                temporaryMatchSessionInfo.getWaypointDistance(),
+                temporaryMatchSessionInfo.getDestinationDistance());
         PaymentRate paymentRate = taxiFareCalculator.calculatePaymentRate(taxiFares);
 
         // 각 사용자의 매칭 정보를 Map 에 삽입 후 반환
@@ -287,36 +288,39 @@ public class MatchServiceImpl implements MatchService {
     private void handleAcceptedMatchedRequests(String sessionId) {
         log.debug("handleAcceptedMatchedRequests 메소드가 호출되었습니다.");
 
-        TemporaryMatchInfo matchInfo = temporaryMatchInfoRepository.findById(sessionId).orElseThrow();
-        log.debug("Found TemporaryMatchInfo : " + matchInfo);
+        TemporaryMatchSessionInfo tempMatchInfo = temporaryMatchInfoRepository.findById(sessionId).orElseThrow();
+        log.debug("Found TemporaryMatchInfo : " + tempMatchInfo);
 
-        MatchRequest fartherReq = activeMatchRequests.get(matchInfo.getDestinationMatchRequestId());
-        MatchRequest nearerReq = activeMatchRequests.get(matchInfo.getWaypointMatchRequestId());
+        MatchRequest fartherReq = activeMatchRequests.get(tempMatchInfo.getDestinationMatchRequestId());
+        MatchRequest nearerReq = activeMatchRequests.get(tempMatchInfo.getWaypointMatchRequestId());
 
-        MatchResult matchResult = MatchResult.builder()
-                .origin(matchInfo.getOrigin())
-                .destination(matchInfo.getDestination())
-                .waypoints(matchInfo.getWaypoints())
+        MatchInfo matchInfo = MatchInfo.builder()
+                .origin(tempMatchInfo.getOrigin())
+                .destination(tempMatchInfo.getDestination())
+                .waypoints(tempMatchInfo.getWaypoints())
+                .totalDistance(tempMatchInfo.getDestinationDistance())
+                .status(RidingStatus.WAITING)
                 .build();
 
-        matchResultRepository.save(matchResult);
-        matchResultMemberRepository.save(MatchResultMember.builder()
+        matchInfoRepository.save(matchInfo);
+        matchInfoMemberRepository.save(MatchInfoMember.builder()
                 .destination(fartherReq.getDestination())
-                .distance(matchInfo.getDestinationDistance())
-                .matchResult(matchResult)
+                .distance(tempMatchInfo.getDestinationDistance())
+                .matchInfo(matchInfo)
                 .member(memberRepository.findMemberByUsername(fartherReq.getUsername()).orElseThrow())
                 .build());
 
-        matchResultMemberRepository.save(MatchResultMember.builder()
+        matchInfoMemberRepository.save(MatchInfoMember.builder()
                 .destination(nearerReq.getDestination())
-                .distance(matchInfo.getWaypointDistance())
-                .matchResult(matchResult)
+                .distance(tempMatchInfo.getWaypointDistance())
+                .matchInfo(matchInfo)
                 .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
                 .build());
 
         activeMatchRequests.remove(fartherReq.getId());
         activeMatchRequests.remove(nearerReq.getId());
-        temporaryMatchInfoRepository.delete(matchInfo);
+
+        temporaryMatchInfoRepository.delete(tempMatchInfo);
     }
 
 
