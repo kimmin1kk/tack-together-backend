@@ -50,7 +50,7 @@ class MatchTest {
     @Test
     @Transactional
     void sameDestinationTest() { //같은 출발지, 같은 목적지
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username1")
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -58,7 +58,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username2")
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -66,7 +66,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username3")
                 .origin(HYUNMU_APT_105)
                 .destination(NAENGJEONG_STA)
@@ -74,7 +74,7 @@ class MatchTest {
                 .destinationRange((short) 2)
                 .build());
 
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
+        String matchedReq = matchService.findMatchingMatchRequests(req1);
 
         log.info("req1 : " + req1.toString());
         log.info("req2 : " + req2.toString());
@@ -86,7 +86,7 @@ class MatchTest {
     @Test
     @Transactional
     void waypointMatchTest() { //같은 출발지 다른 목적지
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username1")
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -94,7 +94,7 @@ class MatchTest {
                 .destinationRange((short) 2)
                 .build());
 
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username2")
                 .origin(STUDENT_PLAZA)
                 .destination(KOR_SHOES_MUSEUM)
@@ -102,7 +102,7 @@ class MatchTest {
                 .destinationRange((short) 2)
                 .build());
 
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username3")
                 .origin(HYUNMU_APT_105)
                 .destination(DONGEUI_UNIV_KAYA)
@@ -110,19 +110,19 @@ class MatchTest {
                 .destinationRange((short) 2)
                 .build());
 
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
+        String matchedReq = matchService.findMatchingMatchRequests(req1);
 
-        log.info("req1 : " + req1.toString());
-        log.info("req2 : " + req2.toString());
-        log.info("req3 : " + req3.toString());
-        log.info("matchedReq : " + matchedReq.toString());
+        log.info("req1 : " + req1);
+        log.info("req2 : " + req2);
+        log.info("req3 : " + req3);
+        log.info("matchedReq : " + matchedReq);
         assertEquals(matchedReq, req2);
     }
 
     @Test
     @Transactional
     void originRangeTest() { //출발지 거리 범위 확인
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username1")
                 .origin(BUSAN_STA)
                 .destination(MARYKNOLL_HOSPITAL)
@@ -130,7 +130,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username2")
                 .origin(MAGA_DUMPLING)
                 .destination(MARYKNOLL_HOSPITAL)
@@ -138,7 +138,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username3")
                 .origin(DONGEUI_UNIV_KAYA)
                 .destination(MARYKNOLL_HOSPITAL)
@@ -146,7 +146,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req1);
+        String matchedReq = matchService.findMatchingMatchRequests(req1);
 
         log.info("req1 : " + req1.toString());
         log.info("req2 : " + req2.toString());
@@ -158,7 +158,7 @@ class MatchTest {
     @Transactional
     @Test
     void destinationRangeTest() { //목적지 거리 범위 확인
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username1")
                 .origin(BUSAN_STA)
                 .destination(MARYKNOLL_HOSPITAL)
@@ -166,7 +166,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req2 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username2")
                 .origin(BUSAN_STA)
                 .destination(GORILLA_SUSHI)
@@ -174,7 +174,7 @@ class MatchTest {
                 .destinationRange((short) 0)
                 .build());
 
-        MatchRequest req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req3 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("username3")
                 .origin(BUSAN_STA)
                 .destination(ABC_BAWLING_CENTER)
@@ -182,7 +182,7 @@ class MatchTest {
                 .destinationRange((short) 1)
                 .build());
 
-        MatchRequest matchedReq = matchService.findMatchingMatchRequests(req2);
+        String matchedReq = matchService.findMatchingMatchRequests(req2);
 
         log.info("req1 : " + req1.toString());
         log.info("req2 : " + req2.toString());

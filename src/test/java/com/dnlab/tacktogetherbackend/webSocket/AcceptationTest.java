@@ -9,6 +9,7 @@ import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
 import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
@@ -39,6 +40,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 
@@ -67,7 +69,7 @@ class AcceptationTest {
     private TestRestTemplate restTemplate;
     private WebSocketStompClient stompClient;
     private StompSession stompSession;
-    private BlockingQueue<MatchRequest> matchRequestBlockingQueue;
+    private BlockingQueue<MatchResultInfoDTO> matchRequestBlockingQueue;
     private MatchResult matchResult;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
@@ -111,7 +113,7 @@ class AcceptationTest {
 
     @BeforeEach
     void setMatchRequests() {
-        MatchRequest req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
+        String req1 = matchService.addMatchRequest(MatchRequestDTO.builder()
                 .username("user1")
                 .origin(STUDENT_PLAZA)
                 .destination(NAENGJEONG_STA)
@@ -143,28 +145,31 @@ class AcceptationTest {
 
         log.info("session subscribed, url : " + subscribeUrl);
         stompSession.send("/app/match/request", req);
-
-        MatchRequest receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
+        //매칭 돌리는 중
+        MatchResultInfoDTO receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
+        stompSession.getSessionId();
 
-        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow()); //상대방 수락
+//        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
 
-        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId()); //수락
+        matchService.acceptMatch(receivedReq.getOpponentMatchRequestId()); //상대방 수락
 
-        // FIXME: 2023-05-03 DB에 저장은 되나 저장되기 전에 조회를 해버려서 테스트에 실패하는 중 이 부분에 타임아웃을 걸어줄 방법 필요
+        stompSession.send("/app/match/accept", matchService.acceptMatch(receivedReq.getId())); //수락 다시 짜야됨
 
-        // FIXME: 2023-05-03 해당 유저랑 관련된 모든 매칭 정보들을 조회 -> 테스트 신뢰도 하락
-        MatchResultMember matchResultMember = matchResultMemberRepository.findMatchResultMembersByMemberUsername(USERNAME).stream()
+//        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId());
+
+
+        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchResult matchResult = recentMatchResults.get(0);
+
+        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-
-        MatchResultMember opponentMatchResultMember = matchResultMemberRepository.findMatchResultMembersByMatchResult(matchResultMember.getMatchResult())
-                .stream()
-                .filter(m -> !m.equals(matchResultMember))
+        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> !m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-
-
 
         assertThat(opponentMatchResultMember.getMember().getUsername()).isEqualTo("user1");
 
@@ -175,7 +180,7 @@ class AcceptationTest {
 
     @Test
     @Transactional
-    void testNonAcception() throws InterruptedException, ExecutionException, TimeoutException {
+    void testReject() throws InterruptedException, ExecutionException, TimeoutException { //미구현
         //매칭 실패 테스트
         MatchRequestDTO req = MatchRequestDTO.builder()
                 .origin(STUDENT_PLAZA)
@@ -183,6 +188,37 @@ class AcceptationTest {
                 .originRange((short) 0)
                 .destinationRange((short) 0)
                 .build();
+
+        log.info("sending : " + req);
+        log.info("sessionId : " + stompSession.getSessionId());
+        String subscribeUrl = "/user/" + USERNAME + "/queue/match";
+        stompSession.subscribe(subscribeUrl, new TestStompFrameHandler());
+
+        log.info("session subscribed, url : " + subscribeUrl);
+        stompSession.send("/app/match/request", req);
+
+        MatchResultInfoDTO receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
+        log.info("received : " + receivedReq);
+
+        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId());
+        stompSession.send("/app/match/accept", receivedReq.getOpponentMatchRequestId()); //수락
+
+        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchResult matchResult = recentMatchResults.get(0);
+
+        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> m.getMember().getUsername().equals(USERNAME))
+                .findFirst()
+                .orElseThrow();
+        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+                .filter(m -> !m.getMember().getUsername().equals(USERNAME))
+                .findFirst()
+                .orElseThrow();
+
+//        assertThat(opponentMatchResultMember.getMember().getUsername()).isNotEqualTo("user1");
+
+        // Then
+        log.info("MatchResultMember : " + matchResultMember);
     }
 
     @RequiredArgsConstructor
@@ -204,13 +240,13 @@ class AcceptationTest {
 
         @Override
         public Type getPayloadType(StompHeaders stompHeaders) {
-            return MatchRequest.class;
+            return MatchResultInfoDTO.class;
         }
 
         @Override
         public void handleFrame(StompHeaders stompHeaders, Object o) {
             log.info("Received STOMP frame : " + o);
-            matchRequestBlockingQueue.offer((MatchRequest) o);
+            matchRequestBlockingQueue.offer((MatchResultInfoDTO) o);
         }
     }
 }

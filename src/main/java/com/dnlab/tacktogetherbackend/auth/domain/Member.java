@@ -37,7 +37,7 @@ public class Member {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Authority> authorities = new ArrayList<>();
 
     @Column(name = "refresh_token")
