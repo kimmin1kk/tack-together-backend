@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "match.range")
-@Getter
-@RequiredArgsConstructor
+@Data
 public class MatchRangeProperties {
-    private final Range origin;
-    private final Range destination;
+    private Range origin;
+    private Range destination;
 
     public int convertRangeLevelToRange(short rangeLevel, RangeKind rangeKind) {
         switch (rangeKind) {
