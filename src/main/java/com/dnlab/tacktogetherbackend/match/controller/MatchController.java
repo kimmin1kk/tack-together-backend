@@ -71,7 +71,8 @@ public class MatchController {
         MatchDecisionStatus status = matchService.acceptMatch(matchRequestId);
 
         if (status.equals(MatchDecisionStatus.ACCEPTED)) {
-            sendAcceptedMessage(matchRequest, matchedRequest);
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
+            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
         } else {
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new UserResponse(status.toString()));
         }
@@ -83,7 +84,6 @@ public class MatchController {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
-
         matchService.rejectMatch(matchRequestId);
 
         UserResponse response = new UserResponse(MatchDecisionStatus.REJECTED.toString());
@@ -100,10 +100,5 @@ public class MatchController {
         if (!matchRequestId.isBlank()) {
             matchService.removeRideRequest(matchRequestId);
         }
-    }
-
-    private void sendAcceptedMessage(MatchRequest m1, MatchRequest m2) {
-        messagingTemplate.convertAndSendToUser(m1.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
-        messagingTemplate.convertAndSendToUser(m2.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
     }
 }
