@@ -5,13 +5,12 @@ import com.dnlab.tacktogetherbackend.auth.dto.RequestLogin;
 import com.dnlab.tacktogetherbackend.auth.dto.RequestRegistration;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseLogin;
 import com.dnlab.tacktogetherbackend.auth.dto.ResponseRegistration;
-import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
-import com.dnlab.tacktogetherbackend.match.domain.MatchResult;
-import com.dnlab.tacktogetherbackend.match.domain.MatchResultMember;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
-import com.dnlab.tacktogetherbackend.match.repository.MatchResultMemberRepository;
-import com.dnlab.tacktogetherbackend.match.repository.MatchResultRepository;
+import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
+import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,17 +59,17 @@ class AcceptationTest {
     private MatchService matchService;
 
     @Autowired
-    private MatchResultRepository matchResultRepository;
+    private MatchInfoRepository matchResultRepository;
 
     @Autowired
-    private MatchResultMemberRepository matchResultMemberRepository;
+    private MatchInfoMemberRepository matchInfoMemberRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
     private WebSocketStompClient stompClient;
     private StompSession stompSession;
     private BlockingQueue<MatchResultInfoDTO> matchRequestBlockingQueue;
-    private MatchResult matchResult;
+    private MatchInfo matchInfo;
 
     private static final String STUDENT_PLAZA = "129.0091051,35.1455966";
     private static final String NAENGJEONG_STA = "129.012175,35.151238";
@@ -152,21 +151,21 @@ class AcceptationTest {
 
 //        matchService.acceptMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId()).orElseThrow());
 
-        matchService.acceptMatch(receivedReq.getOpponentMatchRequestId()); //상대방 수락
+        matchService.acceptMatch(receivedReq.getOpponentUsername()); //상대방 수락 다시 짜야됨
 
         stompSession.send("/app/match/accept", matchService.acceptMatch(receivedReq.getId())); //수락 다시 짜야됨
 
 //        stompSession.send("/app/match/accept", receivedReq.getMatchedMatchRequestId());
 
 
-        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
-        MatchResult matchResult = recentMatchResults.get(0);
+        List<MatchInfo> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchInfo matchResult = recentMatchResults.get(0);
 
-        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+        MatchInfoMember matchResultMember = matchResult.getMatchInfoMembers().stream()
                 .filter(m -> m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+        MatchInfoMember opponentMatchResultMember = matchResult.getMatchInfoMembers().stream()
                 .filter(m -> !m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
@@ -175,7 +174,7 @@ class AcceptationTest {
 
 
         // Then
-        log.info("MatchResultMember : " + matchResultMember);
+        log.info("MatchInfoMember : " + matchResultMember);
     }
 
     @Test
@@ -200,17 +199,17 @@ class AcceptationTest {
         MatchResultInfoDTO receivedReq = matchRequestBlockingQueue.poll(20, TimeUnit.SECONDS);
         log.info("received : " + receivedReq);
 
-        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq).getId());
+        matchService.rejectMatch(matchService.getMatchRequestById(Objects.requireNonNull(receivedReq);
         stompSession.send("/app/match/accept", receivedReq.getOpponentMatchRequestId()); //수락
 
-        List<MatchResult> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
-        MatchResult matchResult = recentMatchResults.get(0);
+        List<MatchInfo> recentMatchResults = matchResultRepository.findTop2ByOrderByCreateTimeDesc();
+        MatchInfo matchInfo = recentMatchResults.get(0);
 
-        MatchResultMember matchResultMember = matchResult.getMatchResultMembers().stream()
+        MatchInfoMember matchResultMember = matchInfo.getMatchInfoMembers().stream()
                 .filter(m -> m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
-        MatchResultMember opponentMatchResultMember = matchResult.getMatchResultMembers().stream()
+        MatchInfoMember opponentMatchResultMember = matchInfo.getMatchInfoMembers().stream()
                 .filter(m -> !m.getMember().getUsername().equals(USERNAME))
                 .findFirst()
                 .orElseThrow();
@@ -218,7 +217,7 @@ class AcceptationTest {
 //        assertThat(opponentMatchResultMember.getMember().getUsername()).isNotEqualTo("user1");
 
         // Then
-        log.info("MatchResultMember : " + matchResultMember);
+        log.info("MatchInfoMember : " + matchResultMember);
     }
 
     @RequiredArgsConstructor
