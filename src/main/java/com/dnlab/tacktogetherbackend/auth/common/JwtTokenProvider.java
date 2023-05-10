@@ -136,22 +136,12 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
     }
 
     public String resolveToken(ServerHttpRequest request) {
-        // 헤더 토큰
         String bearerToken = request.getHeaders().getFirst("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
 
-        // 쿼리 파라미터 토큰
-        HttpServletRequest servletRequest = (HttpServletRequest) request;
-
-        Enumeration<String> names = servletRequest.getHeaderNames();
-        while (names.hasMoreElements()) {
-            String name = names.nextElement();
-            log.debug("headerName : " + name + "\t\t|value : " + ((HttpServletRequest) request).getHeader(name));
-        }
-
-        return resolveTokenByParameter(servletRequest);
+        return null;
     }
 
     private String resolveTokenByParameter(HttpServletRequest request) {

@@ -12,11 +12,13 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,6 +33,7 @@ public class MatchController {
 
     private static final String MATCH_REQUEST_ID = "matchRequestId";
     private static final String DESTINATION_URL = "/queue/match";
+    private static final String HEADER_EVENT_TYPE = "event-type";
 
     // 매칭 요청 처리
     @MessageMapping("/match/request")
@@ -54,8 +57,9 @@ public class MatchController {
             Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.handlePendingMatchedAndGetMatchResultInfos(matchRequestId, opponentMatchRequestId);
 
             // 매칭 결과를 각각 전송
-            messagingTemplate.convertAndSendToUser(resultInfoDTOMap.get(opponentMatchRequestId).getUsername(), DESTINATION_URL, resultInfoDTOMap.get(opponentMatchRequestId));
-            messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, resultInfoDTOMap.get(matchRequestId));
+            Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "request");
+            messagingTemplate.convertAndSendToUser(resultInfoDTOMap.get(opponentMatchRequestId).getUsername(), DESTINATION_URL, new GenericMessage<>(resultInfoDTOMap.get(opponentMatchRequestId), headers));
+            messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, new GenericMessage<>(resultInfoDTOMap.get(matchRequestId), headers));
         }
     }
 
@@ -70,11 +74,12 @@ public class MatchController {
 
         MatchDecisionStatus status = matchService.acceptMatch(matchRequestId);
 
+        Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "accept");
         if (status.equals(MatchDecisionStatus.ACCEPTED)) {
-            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
-            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new UserResponse(MatchDecisionStatus.ACCEPTED.toString()));
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(MatchDecisionStatus.ACCEPTED.toString()), headers));
+            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(MatchDecisionStatus.ACCEPTED.toString()), headers));
         } else {
-            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new UserResponse(status.toString()));
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(status.toString())), headers);
         }
     }
 
@@ -86,9 +91,10 @@ public class MatchController {
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
         matchService.rejectMatch(matchRequestId);
 
-        UserResponse response = new UserResponse(MatchDecisionStatus.REJECTED.toString());
-        messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, response);
-        messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, response);
+        UserResponse payload = new UserResponse(MatchDecisionStatus.REJECTED.toString());
+        Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "reject");
+        messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
+        messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
     }
 
     // WebSocket 연결 해제 처리
@@ -101,4 +107,5 @@ public class MatchController {
             matchService.removeRideRequest(matchRequestId);
         }
     }
+
 }
