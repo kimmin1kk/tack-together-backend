@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class HistoriesDTO {
-    private List<HistoryDTO> histories;
+public class HistoriesDTO { //히스토리 간단히 DTO
+    private Timestamp date;
+    private String origin;
+    private String destination;
+    private int paymentAmount;
 }
