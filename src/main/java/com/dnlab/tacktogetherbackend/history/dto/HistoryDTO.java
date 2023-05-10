@@ -10,23 +10,27 @@ import java.time.Duration;
 
 @Data
 @NoArgsConstructor
-public class HistoryDTO {
+public class HistoryDTO { //히스토리 자세히 DTO
+    private Timestamp date;
     private String origin;
+    private String waypoints;
     private String destination;
     private Timestamp startTime;
     private Duration rideDuration;
     private Timestamp endTime;
-    private String passengerNickname;
+    private String opponentMember;
     private String savedCost;
 
     @Builder
-    public HistoryDTO(String origin, String destination, Timestamp startTime, Duration rideDuration, Timestamp endTime, String passengerNickname, String savedCost) {
+    public HistoryDTO(Timestamp date, String origin, String waypoints,String destination, Timestamp startTime, Duration rideDuration, Timestamp endTime, String opponentMember, String savedCost) {
+        this.date = date;
         this.origin = origin;
+        this.waypoints = waypoints;
         this.destination = destination;
         this.startTime = startTime;
         this.rideDuration = rideDuration;
         this.endTime = endTime;
-        this.passengerNickname = passengerNickname;
+        this.opponentMember = opponentMember;
         this.savedCost = savedCost;
     }
 }
