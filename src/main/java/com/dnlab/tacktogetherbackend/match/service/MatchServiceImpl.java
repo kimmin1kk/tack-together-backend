@@ -15,7 +15,7 @@ import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
-import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchInfoRepository;
+import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchSessionInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gavaghan.geodesy.Ellipsoid;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MatchServiceImpl implements MatchService {
     private final MemberRepository memberRepository;
-    private final TemporaryMatchInfoRepository temporaryMatchInfoRepository;
+    private final TemporaryMatchSessionInfoRepository temporaryMatchSessionInfoRepository;
     private final Map<String, MatchRequest> activeMatchRequests = new ConcurrentHashMap<>();
 
     private final MatchInfoRepository matchInfoRepository;
@@ -159,7 +159,7 @@ public class MatchServiceImpl implements MatchService {
                 .build();
 
         log.debug("Before Saving TemporaryMatchInfo : " + temporaryMatchSessionInfo);
-        TemporaryMatchSessionInfo savedTemporaryMatchSessionInfo = temporaryMatchInfoRepository.save(temporaryMatchSessionInfo);
+        TemporaryMatchSessionInfo savedTemporaryMatchSessionInfo = temporaryMatchSessionInfoRepository.save(temporaryMatchSessionInfo);
         log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchSessionInfo);
 
         Map<String, MatchResultInfoDTO> infoDTOMap = new HashMap<>();
@@ -227,7 +227,7 @@ public class MatchServiceImpl implements MatchService {
         matchRequest.setMatchDecisionStatus(null);
         matchedRequest.setMatched(false);
         matchedRequest.setMatchDecisionStatus(null);
-        temporaryMatchInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
+        temporaryMatchSessionInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
     }
 
     @Override
@@ -288,7 +288,7 @@ public class MatchServiceImpl implements MatchService {
     private void handleAcceptedMatchedRequests(String sessionId) {
         log.debug("handleAcceptedMatchedRequests 메소드가 호출되었습니다.");
 
-        TemporaryMatchSessionInfo tempMatchInfo = temporaryMatchInfoRepository.findById(sessionId).orElseThrow();
+        TemporaryMatchSessionInfo tempMatchInfo = temporaryMatchSessionInfoRepository.findById(sessionId).orElseThrow();
         log.debug("Found TemporaryMatchInfo : " + tempMatchInfo);
 
         MatchRequest fartherReq = activeMatchRequests.get(tempMatchInfo.getDestinationMatchRequestId());
@@ -320,7 +320,7 @@ public class MatchServiceImpl implements MatchService {
         activeMatchRequests.remove(fartherReq.getId());
         activeMatchRequests.remove(nearerReq.getId());
 
-        temporaryMatchInfoRepository.delete(tempMatchInfo);
+        temporaryMatchSessionInfoRepository.delete(tempMatchInfo);
     }
 
 
