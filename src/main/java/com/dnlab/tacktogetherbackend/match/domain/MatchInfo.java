@@ -21,6 +21,9 @@ public class MatchInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "date", nullable = false)
+    private Timestamp date;
+
     @Column(name = "origin", nullable = false)
     private String origin;
 
@@ -53,10 +56,13 @@ public class MatchInfo {
     @PrePersist
     public void prePersist() {
         this.createTime = TimestampUtil.getCurrentTime();
+        this.date = TimestampUtil.getCurrentTime();
     }
 
     @Builder
-    public MatchInfo(String origin,
+    public MatchInfo(
+            Timestamp date,
+            String origin,
                      String destination,
                      String waypoints,
                      int totalDistance,
@@ -64,6 +70,7 @@ public class MatchInfo {
                      int totalFare,
                      RidingStatus status,
                      Set<MatchInfoMember> matchInfoMembers) {
+        this.date = date;
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
