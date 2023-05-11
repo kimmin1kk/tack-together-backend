@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
@@ -117,12 +118,6 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
     }
 
     public String resolveToken(HttpServletRequest request) {
-        Enumeration<String> names = request.getHeaderNames();
-        while (names.hasMoreElements()) {
-            String name = names.nextElement();
-            log.debug("headerName : " + name + "\t\t|value : " + request.getHeader(name));
-        }
-
         // http request 헤더 토큰
         String bearerToken = request.getHeader(authorizationHeader);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
@@ -141,10 +136,17 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
             return bearerToken.substring(7);
         }
 
+        bearerToken = UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams().getFirst("token");
+        if (StringUtils.hasText(bearerToken)) {
+            return bearerToken;
+        }
+
         return null;
     }
 
     private String resolveTokenByParameter(HttpServletRequest request) {
-        return request.getParameter("token");
+        String accessToken = request.getParameter("token");
+        log.debug("accessToken : " + accessToken);
+        return accessToken;
     }
 }
