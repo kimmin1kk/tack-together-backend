@@ -1,9 +1,9 @@
 package com.dnlab.tacktogetherbackend.match.service;
 
-import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;
 
 import java.util.Map;
 import java.util.Optional;
@@ -14,7 +14,7 @@ public interface MatchService {
     void removeRideRequest(String matchRequestId);
     String findMatchingMatchRequests(String matchRequestId);
     Map<String, MatchResultInfoDTO> handlePendingMatchedAndGetMatchResultInfos(String matchRequestId, String matchedMatchRequestsId);
-    MatchDecisionStatus acceptMatch(String matchRequestId);
+    MatchResponseDTO acceptMatch(String matchRequestId);
     void rejectMatch(String matchRequestId);
     void resetMatchRequests();
 }
