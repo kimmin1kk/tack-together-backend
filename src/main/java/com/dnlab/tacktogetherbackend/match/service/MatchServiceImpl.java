@@ -12,10 +12,14 @@ import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
 import com.dnlab.tacktogetherbackend.match.domain.RidingStatus;
 import com.dnlab.tacktogetherbackend.match.domain.redis.TemporaryMatchSessionInfo;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
 import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchSessionInfoRepository;
+import com.dnlab.tacktogetherbackend.matched.domain.redis.MatchSessionInfo;
+import com.dnlab.tacktogetherbackend.matched.domain.redis.SessionMemberInfo;
+import com.dnlab.tacktogetherbackend.matched.repository.MatchSessionInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gavaghan.geodesy.Ellipsoid;
@@ -39,6 +43,7 @@ public class MatchServiceImpl implements MatchService {
 
     private final MatchInfoRepository matchInfoRepository;
     private final MatchInfoMemberRepository matchInfoMemberRepository;
+    private final MatchSessionInfoRepository matchSessionInfoRepository;
     private final KakaoMapService kakaoMapService;
     private final MatchRangeProperties matchRangeProperties;
     private final RedisEntityProperties redisProperties;
@@ -203,17 +208,16 @@ public class MatchServiceImpl implements MatchService {
     // 매칭 수락 로직
     @Override
     @Transactional
-    public MatchDecisionStatus acceptMatch(String matchRequestId) {
+    public MatchResponseDTO acceptMatch(String matchRequestId) {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
         MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
 
         if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
-            handleAcceptedMatchedRequests(matchedRequest.getTempSessionId());
-            return MatchDecisionStatus.ACCEPTED;
+            return handleAcceptedMatchedRequests(matchedRequest.getTempSessionId());
         }
 
-        return matchedRequest.getMatchDecisionStatus();
+        return new MatchResponseDTO(MatchDecisionStatus.WAITING);
     }
 
     @Override
@@ -285,7 +289,7 @@ public class MatchServiceImpl implements MatchService {
         return (int) measurement.getPointToPointDistance();
     }
 
-    private void handleAcceptedMatchedRequests(String sessionId) {
+    private MatchResponseDTO handleAcceptedMatchedRequests(String sessionId) {
         log.debug("handleAcceptedMatchedRequests 메소드가 호출되었습니다.");
 
         TemporaryMatchSessionInfo tempMatchInfo = temporaryMatchSessionInfoRepository.findById(sessionId).orElseThrow();
@@ -317,10 +321,17 @@ public class MatchServiceImpl implements MatchService {
                 .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
                 .build());
 
+        Set<SessionMemberInfo> sessionMemberInfos = new HashSet<>();
+        sessionMemberInfos.add(new SessionMemberInfo(fartherReq.getUsername(), false));
+        sessionMemberInfos.add(new SessionMemberInfo(nearerReq.getUsername(), false));
+        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos));
+
         activeMatchRequests.remove(fartherReq.getId());
         activeMatchRequests.remove(nearerReq.getId());
 
         temporaryMatchSessionInfoRepository.delete(tempMatchInfo);
+
+        return new MatchResponseDTO(MatchDecisionStatus.ACCEPTED, matchSessionInfo.getSessionId());
     }
 
 
