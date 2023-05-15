@@ -9,7 +9,7 @@ import com.dnlab.tacktogetherbackend.match.common.*;
 import com.dnlab.tacktogetherbackend.match.config.MatchRangeProperties;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
-import com.dnlab.tacktogetherbackend.match.domain.RidingStatus;
+import com.dnlab.tacktogetherbackend.match.common.RidingStatus;
 import com.dnlab.tacktogetherbackend.match.domain.redis.TemporaryMatchSessionInfo;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;

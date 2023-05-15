@@ -1,6 +1,7 @@
 package com.dnlab.tacktogetherbackend.match.domain;
 
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
+import com.dnlab.tacktogetherbackend.match.common.RidingStatus;
 import lombok.*;
 import org.hibernate.Hibernate;
 
@@ -46,7 +47,7 @@ public class MatchInfo {
     @Enumerated(EnumType.STRING)
     private RidingStatus status;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "matchInfo")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "matchInfo")
     @ToString.Exclude
     private Set<MatchInfoMember> matchInfoMembers = new LinkedHashSet<>();
 

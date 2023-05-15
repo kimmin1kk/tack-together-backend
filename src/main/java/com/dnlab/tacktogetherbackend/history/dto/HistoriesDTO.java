@@ -1,6 +1,7 @@
 package com.dnlab.tacktogetherbackend.history.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,4 +15,5 @@ public class HistoriesDTO { //히스토리 간단히 DTO
     private String origin;
     private String destination;
     private int paymentAmount;
+
 }
