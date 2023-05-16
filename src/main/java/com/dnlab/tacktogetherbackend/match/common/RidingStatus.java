@@ -1,4 +1,4 @@
-package com.dnlab.tacktogetherbackend.match.domain;
+package com.dnlab.tacktogetherbackend.match.common;
 
 public enum RidingStatus {
     CANCELED,

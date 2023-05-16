@@ -4,7 +4,7 @@ import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
-import com.dnlab.tacktogetherbackend.match.dto.UserResponse;
+import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,14 +72,14 @@ public class MatchController {
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
 
-        MatchDecisionStatus status = matchService.acceptMatch(matchRequestId);
+        MatchResponseDTO matchResponseDTO = matchService.acceptMatch(matchRequestId);
 
         Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "accept");
-        if (status.equals(MatchDecisionStatus.ACCEPTED)) {
-            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(MatchDecisionStatus.ACCEPTED.toString()), headers));
-            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(MatchDecisionStatus.ACCEPTED.toString()), headers));
+        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
+            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
         } else {
-            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new UserResponse(status.toString())), headers);
+            messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
         }
     }
 
@@ -91,7 +91,7 @@ public class MatchController {
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
         matchService.rejectMatch(matchRequestId);
 
-        UserResponse payload = new UserResponse(MatchDecisionStatus.REJECTED.toString());
+        MatchResponseDTO payload = new MatchResponseDTO(MatchDecisionStatus.REJECTED);
         Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "reject");
         messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
         messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
@@ -103,7 +103,7 @@ public class MatchController {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
 
-        if (!matchRequestId.isBlank()) {
+        if (matchRequestId != null) {
             matchService.removeRideRequest(matchRequestId);
         }
     }
