@@ -324,7 +324,7 @@ public class MatchServiceImpl implements MatchService {
         Set<SessionMemberInfo> sessionMemberInfos = new HashSet<>();
         sessionMemberInfos.add(new SessionMemberInfo(fartherReq.getUsername(), false));
         sessionMemberInfos.add(new SessionMemberInfo(nearerReq.getUsername(), false));
-        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos));
+        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos, matchInfo.getId()));
 
         activeMatchRequests.remove(fartherReq.getId());
         activeMatchRequests.remove(nearerReq.getId());

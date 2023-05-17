@@ -8,6 +8,7 @@ import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;
 import com.dnlab.tacktogetherbackend.match.service.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -33,7 +34,9 @@ public class MatchController {
 
     private static final String MATCH_REQUEST_ID = "matchRequestId";
     private static final String DESTINATION_URL = "/queue/match";
-    private static final String HEADER_EVENT_TYPE = "event-type";
+
+    @Value("${stomp.header-event-type}")
+    private String headerEventType;
 
     // 매칭 요청 처리
     @MessageMapping("/match/request")
@@ -57,7 +60,7 @@ public class MatchController {
             Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.handlePendingMatchedAndGetMatchResultInfos(matchRequestId, opponentMatchRequestId);
 
             // 매칭 결과를 각각 전송
-            Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "request");
+            Map<String, Object> headers = Collections.singletonMap(headerEventType, "request");
             messagingTemplate.convertAndSendToUser(resultInfoDTOMap.get(opponentMatchRequestId).getUsername(), DESTINATION_URL, new GenericMessage<>(resultInfoDTOMap.get(opponentMatchRequestId), headers));
             messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, new GenericMessage<>(resultInfoDTOMap.get(matchRequestId), headers));
         }
@@ -74,7 +77,7 @@ public class MatchController {
 
         MatchResponseDTO matchResponseDTO = matchService.acceptMatch(matchRequestId);
 
-        Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "accept");
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "accept");
         if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
             messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
@@ -92,7 +95,7 @@ public class MatchController {
         matchService.rejectMatch(matchRequestId);
 
         MatchResponseDTO payload = new MatchResponseDTO(MatchDecisionStatus.REJECTED);
-        Map<String, Object> headers = Collections.singletonMap(HEADER_EVENT_TYPE, "reject");
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "reject");
         messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
         messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
     }
