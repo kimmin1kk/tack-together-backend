@@ -23,7 +23,6 @@ public class MatchedServiceImpl implements MatchedService {
     private final MatchSessionInfoRepository matchSessionInfoRepository;
 
     @Override
-    @Transactional
     public LocationInfoResponseDTO handleLocationUpdate(LocationUpdateRequestDTO locationUpdateRequestDTO, String username) {
         MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.findById(locationUpdateRequestDTO.getSessionId()).orElseThrow();
         SessionMemberInfo sessionMemberInfo = getSessionMemberInfoByUsername(matchSessionInfo, username);
@@ -36,11 +35,6 @@ public class MatchedServiceImpl implements MatchedService {
         boolean ridingStarted = matchSessionInfo.getMemberInfos()
                 .stream()
                 .allMatch(SessionMemberInfo::isDepartureAgreed);
-        if (ridingStarted) {
-            MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
-            matchInfo.setRidingStartTime(TimestampUtil.getCurrentTime());
-            matchInfo.setStatus(RidingStatus.ONGOING);
-        }
 
         return LocationInfoResponseDTO.builder()
                 .sessionId(locationUpdateRequestDTO.getSessionId())
@@ -49,6 +43,17 @@ public class MatchedServiceImpl implements MatchedService {
                 .location(locationUpdateRequestDTO.getLocation())
                 .ridingStarted(ridingStarted)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void handleStartRiding(String sessionId, String currentLocation) {
+        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.findById(sessionId).orElseThrow();
+        MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
+
+        matchInfo.setRidingStartTime(TimestampUtil.getCurrentTime());
+        matchInfo.setStatus(RidingStatus.ONGOING);
+        matchInfo.setOrigin(currentLocation);
     }
 
     @Override

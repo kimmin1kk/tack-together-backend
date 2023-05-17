@@ -42,12 +42,12 @@ public class MatchedController {
 
         // 동승 시작 시 사용자에게도 메시지 전송
         if (locationInfoResponseDTO.isRidingStarted()) {
+            matchedService.handleStartRiding(locationInfoResponseDTO.getSessionId(), locationInfoResponseDTO.getLocation());
             messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, new GenericMessage<>(LocationInfoResponseDTO.builder()
                     .sessionId(locationUpdateRequestDTO.getSessionId())
                     .ridingStarted(true)
                     .build(), headers));
         }
     }
-
 
 }
