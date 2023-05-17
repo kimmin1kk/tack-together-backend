@@ -20,6 +20,7 @@ public class MatchSessionInfo implements Serializable {
     private Set<SessionMemberInfo> memberInfos = new LinkedHashSet<>();
 
     public MatchSessionInfo(Set<SessionMemberInfo> memberInfos, Long matchInfoId) {
+        this.matchInfoId = matchInfoId;
         this.sessionId = UUID.randomUUID().toString();
         this.memberInfos = memberInfos;
     }
