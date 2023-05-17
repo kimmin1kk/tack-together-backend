@@ -3,16 +3,22 @@ package com.dnlab.tacktogetherbackend.matched.service;
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
 import com.dnlab.tacktogetherbackend.match.common.RidingStatus;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
 import com.dnlab.tacktogetherbackend.matched.domain.redis.MatchSessionInfo;
 import com.dnlab.tacktogetherbackend.matched.domain.redis.SessionMemberInfo;
+import com.dnlab.tacktogetherbackend.matched.dto.DropOffNotificationDTO;
+import com.dnlab.tacktogetherbackend.matched.dto.DropOffRequestDTO;
 import com.dnlab.tacktogetherbackend.matched.dto.LocationInfoResponseDTO;
 import com.dnlab.tacktogetherbackend.matched.dto.LocationUpdateRequestDTO;
 import com.dnlab.tacktogetherbackend.matched.repository.MatchSessionInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.Set;
 
 
 @Service
@@ -66,6 +72,35 @@ public class MatchedServiceImpl implements MatchedService {
                 .findFirst()
                 .orElseThrow()
                 .getUsername();
+    }
+
+    @Override
+    @Transactional
+    public DropOffNotificationDTO processDropOffRequest(DropOffRequestDTO dropOffRequestDTO, String username) {
+        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.findById(dropOffRequestDTO.getSessionId()).orElseThrow();
+        MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
+        Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
+
+        MatchInfoMember waypointMember = matchInfoMembers.stream()
+                .min(Comparator.comparing(MatchInfoMember::getDistance))
+                .orElseThrow();
+        MatchInfoMember destinationMember = matchInfoMembers.stream()
+                .max(Comparator.comparing(MatchInfoMember::getDestination))
+                .orElseThrow();
+
+        if (waypointMember.getMember().getUsername().equals(username)) {
+            matchInfo.setWaypoints(dropOffRequestDTO.getEndLocation());
+            waypointMember.setDestination(dropOffRequestDTO.getEndLocation());
+        } else if (destinationMember.getMember().getUsername().equals(username)) {
+            matchInfo.setDestination(dropOffRequestDTO.getEndLocation());
+            destinationMember.setDestination(dropOffRequestDTO.getEndLocation());
+        }
+
+        return DropOffNotificationDTO.builder()
+                .dropOffLocation(dropOffRequestDTO.getEndLocation())
+                .sessionId(dropOffRequestDTO.getSessionId())
+                .username(username)
+                .build();
     }
 
     private SessionMemberInfo getSessionMemberInfoByUsername(MatchSessionInfo matchSessionInfo, String username) {

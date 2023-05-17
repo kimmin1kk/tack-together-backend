@@ -1,5 +1,7 @@
 package com.dnlab.tacktogetherbackend.matched.controller;
 
+import com.dnlab.tacktogetherbackend.matched.dto.DropOffNotificationDTO;
+import com.dnlab.tacktogetherbackend.matched.dto.DropOffRequestDTO;
 import com.dnlab.tacktogetherbackend.matched.dto.LocationInfoResponseDTO;
 import com.dnlab.tacktogetherbackend.matched.dto.LocationUpdateRequestDTO;
 import com.dnlab.tacktogetherbackend.matched.service.MatchedService;
@@ -49,5 +51,13 @@ public class MatchedController {
                     .build(), headers));
         }
     }
+    @MessageMapping("/matched/dropOff")
+    public void handleDropOffRequest(Principal principal,
+                                       @Payload DropOffRequestDTO dropOffRequestDTO) {
+        String opponentUsername = matchedService.getOpponentUsernameBySessionId(dropOffRequestDTO.getSessionId(), principal.getName());
+        DropOffNotificationDTO dropOffNotificationDTO = matchedService.processDropOffRequest(dropOffRequestDTO, principal.getName());
 
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "dropOff");
+        messagingTemplate.convertAndSendToUser(opponentUsername, DESTINATION_URL, new GenericMessage<>(dropOffNotificationDTO, headers));
+    }
 }
