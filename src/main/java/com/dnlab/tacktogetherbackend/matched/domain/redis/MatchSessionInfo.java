@@ -16,10 +16,10 @@ import java.util.UUID;
 public class MatchSessionInfo implements Serializable {
     @Id
     private String sessionId;
-
+    private Long matchInfoId;
     private Set<SessionMemberInfo> memberInfos = new LinkedHashSet<>();
 
-    public MatchSessionInfo(Set<SessionMemberInfo> memberInfos) {
+    public MatchSessionInfo(Set<SessionMemberInfo> memberInfos, Long matchInfoId) {
         this.sessionId = UUID.randomUUID().toString();
         this.memberInfos = memberInfos;
     }
