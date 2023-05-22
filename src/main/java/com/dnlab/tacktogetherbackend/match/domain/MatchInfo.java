@@ -62,7 +62,6 @@ public class MatchInfo {
 
     @Builder
     public MatchInfo(
-            Timestamp date,
             String origin,
                      String destination,
                      String waypoints,
