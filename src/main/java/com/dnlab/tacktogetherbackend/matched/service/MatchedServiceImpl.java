@@ -1,17 +1,17 @@
 package com.dnlab.tacktogetherbackend.matched.service;
 
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
+import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
+import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
 import com.dnlab.tacktogetherbackend.match.common.RidingStatus;
+import com.dnlab.tacktogetherbackend.match.common.TaxiFareCalculator;
+import com.dnlab.tacktogetherbackend.match.common.TaxiFares;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
-import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
 import com.dnlab.tacktogetherbackend.matched.domain.redis.MatchSessionInfo;
 import com.dnlab.tacktogetherbackend.matched.domain.redis.SessionMemberInfo;
-import com.dnlab.tacktogetherbackend.matched.dto.DropOffNotificationDTO;
-import com.dnlab.tacktogetherbackend.matched.dto.DropOffRequestDTO;
-import com.dnlab.tacktogetherbackend.matched.dto.LocationInfoResponseDTO;
-import com.dnlab.tacktogetherbackend.matched.dto.LocationUpdateRequestDTO;
+import com.dnlab.tacktogetherbackend.matched.dto.*;
 import com.dnlab.tacktogetherbackend.matched.repository.MatchSessionInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,8 +25,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MatchedServiceImpl implements MatchedService {
     private final MatchInfoRepository matchInfoRepository;
-    private final MatchInfoMemberRepository matchInfoMemberRepository;
     private final MatchSessionInfoRepository matchSessionInfoRepository;
+    private final KakaoMapService kakaoMapService;
+    private final TaxiFareCalculator taxiFareCalculator;
 
     @Override
     public LocationInfoResponseDTO handleLocationUpdate(LocationUpdateRequestDTO locationUpdateRequestDTO, String username) {
@@ -91,9 +92,21 @@ public class MatchedServiceImpl implements MatchedService {
         if (waypointMember.getMember().getUsername().equals(username)) {
             matchInfo.setWaypoints(dropOffRequestDTO.getEndLocation());
             waypointMember.setDestination(dropOffRequestDTO.getEndLocation());
+            waypointMember.setDistance(kakaoMapService.getDistance(RequestDirections.builder()
+                    .origin(matchInfo.getOrigin())
+                    .destination(waypointMember.getDestination())
+                    .build()));
+
         } else if (destinationMember.getMember().getUsername().equals(username)) {
+            int distance = kakaoMapService.getDistance(RequestDirections.builder()
+                    .origin(matchInfo.getOrigin())
+                    .waypoints(waypointMember.getDestination())
+                    .destination(destinationMember.getDestination())
+                    .build());
             matchInfo.setDestination(dropOffRequestDTO.getEndLocation());
+            matchInfo.setTotalDistance(distance);
             destinationMember.setDestination(dropOffRequestDTO.getEndLocation());
+            destinationMember.setDistance(distance);
         }
 
         return DropOffNotificationDTO.builder()
@@ -109,5 +122,36 @@ public class MatchedServiceImpl implements MatchedService {
                 .filter(sessionMemberInfo -> sessionMemberInfo.getUsername().equals(username))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    @Override
+    @Transactional
+    public SettlementReceivedRequestDTO processSettlementRequest(SettlementRequestDTO settlementRequestDTO, String username) {
+        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.findById(settlementRequestDTO.getSessionId()).orElseThrow();
+        MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
+        matchInfo.setTotalFare(settlementRequestDTO.getTotalFare());
+
+        Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
+        MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
+        MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
+
+        TaxiFares taxiFares = taxiFareCalculator.calculateFare(settlementRequestDTO.getTotalFare(),
+                waypointMatchInfoMember.getDistance(),
+                destinationMatchInfoMember.getDistance());
+
+        waypointMatchInfoMember.setPaymentAmount(taxiFares.getWaypointFare());
+        destinationMatchInfoMember.setPaymentAmount(taxiFares.getDestinationFare());
+
+        return SettlementReceivedRequestDTO.builder()
+                .sessionId(settlementRequestDTO.getSessionId())
+                .requestedFare(waypointMatchInfoMember.getPaymentAmount())
+                .accountInfo(settlementRequestDTO.getAccountInfo())
+                .totalFare(settlementRequestDTO.getTotalFare())
+                .username(matchSessionInfo.getMemberInfos()
+                        .stream()
+                        .filter(sessionMemberInfo -> !sessionMemberInfo.getUsername().equals(username))
+                        .findAny().orElseThrow()
+                        .getUsername())
+                .build();
     }
 }
