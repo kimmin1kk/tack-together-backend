@@ -1,7 +1,6 @@
 package com.dnlab.tacktogetherbackend.matched.controller;
 
-import com.dnlab.tacktogetherbackend.matched.dto.LocationInfoResponseDTO;
-import com.dnlab.tacktogetherbackend.matched.dto.LocationUpdateRequestDTO;
+import com.dnlab.tacktogetherbackend.matched.dto.*;
 import com.dnlab.tacktogetherbackend.matched.service.MatchedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +47,26 @@ public class MatchedController {
                     .ridingStarted(true)
                     .build(), headers));
         }
+    }
+
+    @MessageMapping("/matched/dropOff")
+    public void handleDropOffRequest(Principal principal,
+                                     @Payload DropOffRequestDTO dropOffRequestDTO) {
+        String opponentUsername = matchedService.getOpponentUsernameBySessionId(dropOffRequestDTO.getSessionId(), principal.getName());
+        DropOffNotificationDTO dropOffNotificationDTO = matchedService.processDropOffRequest(dropOffRequestDTO, principal.getName());
+
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "dropOff");
+        messagingTemplate.convertAndSendToUser(opponentUsername, DESTINATION_URL, new GenericMessage<>(dropOffNotificationDTO, headers));
+    }
+
+
+    @MessageMapping("/matched/settlement")
+    public void handleSettlementRequest(Principal principal,
+                                        @Payload SettlementRequestDTO settlementRequestDTO) {
+        SettlementReceivedRequestDTO settlementReceivedRequestDTO = matchedService.processSettlementRequest(settlementRequestDTO, principal.getName());
+
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "settlement");
+        messagingTemplate.convertAndSendToUser(settlementReceivedRequestDTO.getUsername(), DESTINATION_URL, new GenericMessage<>(settlementReceivedRequestDTO, headers));
     }
 
 }
