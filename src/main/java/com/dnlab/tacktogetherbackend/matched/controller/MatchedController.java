@@ -29,7 +29,7 @@ public class MatchedController {
     @Value("${stomp.header-event-type}")
     private String headerEventType;
 
-    @MessageMapping("/matched/shareLocation")
+    @MessageMapping("/matched/share-location")
     public void handleSharingLocation(Principal principal,
                                       @Payload LocationUpdateRequestDTO locationUpdateRequestDTO) {
         String opponentUsername = matchedService.getOpponentUsernameBySessionId(locationUpdateRequestDTO.getSessionId(), principal.getName());
@@ -49,7 +49,7 @@ public class MatchedController {
         }
     }
 
-    @MessageMapping("/matched/dropOff")
+    @MessageMapping("/matched/drop-off")
     public void handleDropOffRequest(Principal principal,
                                      @Payload DropOffRequestDTO dropOffRequestDTO) {
         String opponentUsername = matchedService.getOpponentUsernameBySessionId(dropOffRequestDTO.getSessionId(), principal.getName());

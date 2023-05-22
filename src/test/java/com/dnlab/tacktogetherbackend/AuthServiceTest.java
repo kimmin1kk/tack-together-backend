@@ -4,8 +4,8 @@ import com.dnlab.tacktogetherbackend.auth.common.JwtTokenProvider;
 import com.dnlab.tacktogetherbackend.auth.common.Role;
 import com.dnlab.tacktogetherbackend.auth.domain.Authority;
 import com.dnlab.tacktogetherbackend.auth.domain.Member;
-import com.dnlab.tacktogetherbackend.auth.dto.RequestRefreshToken;
-import com.dnlab.tacktogetherbackend.auth.dto.RequestLogin;
+import com.dnlab.tacktogetherbackend.auth.dto.RefreshTokenRequestDTO;
+import com.dnlab.tacktogetherbackend.auth.dto.LoginRequestDTO;
 import com.dnlab.tacktogetherbackend.auth.repository.AuthorityRepository;
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
@@ -75,14 +75,14 @@ class AuthServiceTest {
         log.info(accessToken);
         log.info(refreshToken);
 
-        RequestLogin requestLogin = RequestLogin.builder()
+        LoginRequestDTO loginRequestDTO = LoginRequestDTO.builder()
                 .username(member.getUsername())
                 .password(member.getPassword())
                 .build();
 
         mockMvc.perform(post("/api/auth/signIn")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestLogin)))
+                        .content(new ObjectMapper().writeValueAsString(loginRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").value(refreshToken));
@@ -90,11 +90,11 @@ class AuthServiceTest {
 
     @Test
     void testRefreshToken() throws Exception {
-        RequestRefreshToken requestRefreshToken = RequestRefreshToken.builder().refreshToken(refreshToken).build();
+        RefreshTokenRequestDTO refreshTokenRequestDTO = RefreshTokenRequestDTO.builder().refreshToken(refreshToken).build();
 
         mockMvc.perform(post("/api/auth/refreshToken")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestRefreshToken)))
+                        .content(new ObjectMapper().writeValueAsString(refreshTokenRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty());
