@@ -1,10 +1,8 @@
 package com.dnlab.tacktogetherbackend.auth.controller;
 
-import com.dnlab.tacktogetherbackend.auth.common.JwtFilter;
 import com.dnlab.tacktogetherbackend.auth.dto.*;
 import com.dnlab.tacktogetherbackend.auth.exception.DuplicateUsernameException;
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -33,8 +31,8 @@ public class AuthController {
      * @return jwt(인증 토큰) 반환
      */
     @PostMapping("/signIn")
-    public ResponseEntity<ResponseLogin> signIn(@Valid @RequestBody RequestLogin loginDTO) {
-        ResponseLogin token = authService.signIn(loginDTO);
+    public ResponseEntity<LoginResponseDTO> signIn(@Valid @RequestBody LoginRequestDTO loginDTO) {
+        LoginResponseDTO token = authService.signIn(loginDTO);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(authorizationHeader, "Bearer " + token.getAccessToken());
@@ -47,7 +45,7 @@ public class AuthController {
      * @return 가입된 회원 정보 반환
      */
     @PostMapping("/signUp")
-    public ResponseEntity<ResponseRegistration> signUp(@Valid @RequestBody RequestRegistration registrationDTO) {
+    public ResponseEntity<RegistrationResponseDTO> signUp(@Valid @RequestBody RegistrationRequestDTO registrationDTO) {
         try {
             return ResponseEntity.ok(authService.signUp(registrationDTO));
         } catch (DuplicateUsernameException e) {
@@ -56,12 +54,12 @@ public class AuthController {
     }
 
     @PostMapping("/refreshToken")
-    public ResponseEntity<ResponseLogin> refreshAccessToken(@Valid @RequestBody RequestRefreshToken requestRefreshToken) {
-        return ResponseEntity.ok(authService.refreshAccessToken(requestRefreshToken));
+    public ResponseEntity<LoginResponseDTO> refreshAccessToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        return ResponseEntity.ok(authService.refreshAccessToken(refreshTokenRequestDTO));
     }
 
     @GetMapping("/checkUsername")
-    public ResponseEntity<ResponseCheckUsername> checkDuplicatedUsername(@RequestParam String username) {
+    public ResponseEntity<CheckUsernameRequestDTO> checkDuplicatedUsername(@RequestParam String username) {
         return ResponseEntity.ok(authService.checkDuplicatedUsername(username));
     }
 
