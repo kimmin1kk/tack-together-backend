@@ -1,10 +1,10 @@
 package com.dnlab.tacktogetherbackend.history.service;
 
-import com.dnlab.tacktogetherbackend.history.dto.SimpleHistoryDTO;
-import com.dnlab.tacktogetherbackend.history.dto.DetailHistoryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
 
 public interface HistoryService {
-    SimpleHistoryDTO getSimpleHistoryByUsername(String username);
-    DetailHistoryDTO getDetailHistoryByUsername(String username);
+    HistorySummaryDTO getHistorySummaryByUsername(String username);
+    HistoryDetailDTO getHistoryDetailByUsername(String username);
 
 }

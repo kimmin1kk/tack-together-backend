@@ -1,6 +1,6 @@
 package com.dnlab.tacktogetherbackend.history.service;
-import com.dnlab.tacktogetherbackend.history.dto.SimpleHistoryDTO;
-import com.dnlab.tacktogetherbackend.history.dto.DetailHistoryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
 
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
@@ -19,9 +19,10 @@ public class HistoryServiceImpl implements HistoryService {
     private final MatchInfoRepository matchInfoRepository;
     private final TemporaryMatchSessionInfoRepository temporaryMatchSessionInfoRepository;
 
+    // 히스토리 서비스에서는 get만 할 예정이므로 별 다른 서비스 로직이 필요하진 않을 것 같음
     @Override //History 간단하게
-    public SimpleHistoryDTO getSimpleHistoryByUsername(String username) {
-        return new SimpleHistoryDTO().builder()
+    public HistorySummaryDTO getHistorySummaryByUsername(String username) {
+        return new HistorySummaryDTO().builder()
                 .date()
                 .origin()
                 .destination()
@@ -31,8 +32,8 @@ public class HistoryServiceImpl implements HistoryService {
 
     @Override //History 자세하게
     @Builder
-    public DetailHistoryDTO getDetailHistoryByUsername(String username) {
-        return new DetailHistoryDTO().builder()
+    public HistoryDetailDTO getHistoryDetailByUsername(String username) {
+        return new HistoryDetailDTO().builder()
                 .date()
                 .origin()
                 .waypoints()

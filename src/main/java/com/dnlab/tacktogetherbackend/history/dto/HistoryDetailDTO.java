@@ -10,7 +10,7 @@ import java.time.Duration;
 
 @Data
 @NoArgsConstructor
-public class DetailHistoryDTO implements Serializable { //히스토리 자세히 DTO
+public class HistoryDetailDTO implements Serializable { //히스토리 자세히 DTO
     private long date;
     private String origin;
     private String waypoints;
@@ -22,7 +22,7 @@ public class DetailHistoryDTO implements Serializable { //히스토리 자세히
     private String savedCost;
 
     @Builder
-    public DetailHistoryDTO(long date, String origin, String waypoints, String destination, long startTime, Duration rideDuration, long endTime, String opponentMember, String savedCost) {
+    public HistoryDetailDTO(long date, String origin, String waypoints, String destination, long startTime, Duration rideDuration, long endTime, String opponentMember, String savedCost) {
         this.date = date;
         this.origin = origin;
         this.waypoints = waypoints;
