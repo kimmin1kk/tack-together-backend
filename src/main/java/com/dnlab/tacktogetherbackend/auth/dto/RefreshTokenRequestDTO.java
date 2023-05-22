@@ -6,11 +6,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class RequestRefreshToken {
+public class RefreshTokenRequestDTO {
     private String refreshToken;
 
     @Builder
-    public RequestRefreshToken(String refreshToken) {
+    public RefreshTokenRequestDTO(String refreshToken) {
         this.refreshToken = refreshToken;
     }
 }

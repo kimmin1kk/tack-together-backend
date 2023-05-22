@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @NoArgsConstructor
-public class RequestRegistration {
+public class RegistrationRequestDTO {
     @NotNull
     @Size(min = 5, max = 20)
     private String username;

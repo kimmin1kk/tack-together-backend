@@ -35,9 +35,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public ResponseLogin signIn(RequestLogin requestLogin) {
+    public LoginResponseDTO signIn(LoginRequestDTO loginRequestDTO) {
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(requestLogin.getUsername(), requestLogin.getPassword());
+                new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         memberRepository.findMemberByUsername(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."))
                 .setRefreshToken(refreshToken);
 
-        return ResponseLogin.builder()
+        return LoginResponseDTO.builder()
                 .username(authentication.getName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public ResponseRegistration signUp(RequestRegistration registrationDTO) {
+    public RegistrationResponseDTO signUp(RegistrationRequestDTO registrationDTO) {
         if (memberRepository.existsByUsername(registrationDTO.getUsername())) {
             throw new DuplicateUsernameException("해당 유저네임이 이미 존재합니다");
         }
@@ -76,13 +76,13 @@ public class AuthServiceImpl implements AuthService {
                 .authorityName(Role.ROLE_MEMBER)
                 .build());
 
-        return ResponseRegistration.of(member, authority);
+        return RegistrationResponseDTO.of(member, authority);
     }
 
     @Override
     @Transactional
-    public ResponseLogin refreshAccessToken(RequestRefreshToken requestRefreshToken) {
-        String refreshToken = requestRefreshToken.getRefreshToken();
+    public LoginResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        String refreshToken = refreshTokenRequestDTO.getRefreshToken();
         jwtTokenProvider.validateToken(refreshToken); // 유효성 검사
 
         Member member = memberRepository.findMemberByRefreshToken(refreshToken).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."));
@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshToken = jwtTokenProvider.createRefreshToken();
         member.setRefreshToken(newRefreshToken);
 
-        return ResponseLogin.builder()
+        return LoginResponseDTO.builder()
                 .username(member.getUsername())
                 .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
                 .refreshToken(newRefreshToken)
@@ -103,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseCheckUsername checkDuplicatedUsername(String username) {
-        return new ResponseCheckUsername(memberRepository.existsByUsername(username));
+    public CheckUsernameRequestDTO checkDuplicatedUsername(String username) {
+        return new CheckUsernameRequestDTO(memberRepository.existsByUsername(username));
     }
 }

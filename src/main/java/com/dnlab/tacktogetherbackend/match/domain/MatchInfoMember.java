@@ -35,9 +35,6 @@ public class MatchInfoMember {
     @Column(name = "payment_fare")
     private int paymentAmount;
 
-    @Column(name = "payed", nullable = false)
-    private boolean payed = false;
-
     @Column(name = "distance", nullable = false)
     private int distance;
 

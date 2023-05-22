@@ -12,16 +12,16 @@ import java.util.stream.Stream;
 
 @Data
 @NoArgsConstructor
-public class ResponseRegistration {
+public class RegistrationResponseDTO {
     private String username;
     private String password;
     private String name;
     private Set<String> authorities;
 
-    public static ResponseRegistration of(Member member, Authority authority) {
+    public static RegistrationResponseDTO of(Member member, Authority authority) {
         if (member == null) return null;
 
-        return ResponseRegistration.builder()
+        return RegistrationResponseDTO.builder()
                 .username(member.getUsername())
                 .password(member.getPassword())
                 .name(member.getName())
@@ -30,7 +30,7 @@ public class ResponseRegistration {
     }
 
     @Builder
-    public ResponseRegistration(String username, String password, String name, Set<String> authorities) {
+    public RegistrationResponseDTO(String username, String password, String name, Set<String> authorities) {
         this.username = username;
         this.password = password;
         this.name = name;
