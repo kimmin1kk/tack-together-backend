@@ -74,7 +74,7 @@ public class MatchController {
     @MessageMapping("/match/accept")
     public void handleAccept(SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
-        log.info(matchRequestId);
+        log.debug("matchRequestId (/match/accept): " + matchRequestId);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
         MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
 
