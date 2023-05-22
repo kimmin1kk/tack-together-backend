@@ -30,7 +30,7 @@ public class AuthController {
      * @param loginDTO username, password 가 담겨있는 dto
      * @return jwt(인증 토큰) 반환
      */
-    @PostMapping("/signIn")
+    @PostMapping("/sign-in")
     public ResponseEntity<LoginResponseDTO> signIn(@Valid @RequestBody LoginRequestDTO loginDTO) {
         LoginResponseDTO token = authService.signIn(loginDTO);
 
@@ -44,7 +44,7 @@ public class AuthController {
      * @param registrationDTO 회원 가입 정보가 담겨있는 dto
      * @return 가입된 회원 정보 반환
      */
-    @PostMapping("/signUp")
+    @PostMapping("/sign-up")
     public ResponseEntity<RegistrationResponseDTO> signUp(@Valid @RequestBody RegistrationRequestDTO registrationDTO) {
         try {
             return ResponseEntity.ok(authService.signUp(registrationDTO));
@@ -53,18 +53,18 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/refreshToken")
+    @PostMapping("/refresh-token")
     public ResponseEntity<LoginResponseDTO> refreshAccessToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
         return ResponseEntity.ok(authService.refreshAccessToken(refreshTokenRequestDTO));
     }
 
-    @GetMapping("/checkUsername")
+    @GetMapping("/check-username")
     public ResponseEntity<CheckUsernameRequestDTO> checkDuplicatedUsername(@RequestParam String username) {
         return ResponseEntity.ok(authService.checkDuplicatedUsername(username));
     }
 
     // 인증 테스트 url
-    @GetMapping("/testAuth")
+    @GetMapping("/test-auth")
     public ResponseEntity<String> testAuthentication(HttpServletRequest request) {
         if (authService.validAuthentication(request)) {
             return new ResponseEntity<>(HttpStatus.OK);
