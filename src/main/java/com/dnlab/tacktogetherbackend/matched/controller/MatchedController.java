@@ -36,7 +36,7 @@ public class MatchedController {
         LocationInfoResponseDTO locationInfoResponseDTO = matchedService.handleLocationUpdate(locationUpdateRequestDTO, principal.getName());
 
 
-        Map<String, Object> headers = Collections.singletonMap(headerEventType, "request");
+        Map<String, Object> headers = Collections.singletonMap(headerEventType, "shareLocation");
         messagingTemplate.convertAndSendToUser(opponentUsername, DESTINATION_URL, new GenericMessage<>(locationInfoResponseDTO, headers));
 
         // 동승 시작 시 사용자에게도 메시지 전송
