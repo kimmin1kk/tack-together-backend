@@ -136,9 +136,9 @@ public class MatchServiceImpl implements MatchService {
                 .waypoints(matchRequest.getDestination())
                 .build());
 
-        MatchRequest fartherRequest = null;
-        MatchRequest nearerRequest = null;
-        ResponseDirections fixedDirections = null;
+        MatchRequest fartherRequest;
+        MatchRequest nearerRequest;
+        ResponseDirections fixedDirections;
 
         // 서로를 경유지로 설정했을 경우 어느 경로가 더 짧은가 비교
         if (distance1 > distance2) {
@@ -166,6 +166,8 @@ public class MatchServiceImpl implements MatchService {
         log.debug("Before Saving TemporaryMatchInfo : " + temporaryMatchSessionInfo);
         TemporaryMatchSessionInfo savedTemporaryMatchSessionInfo = temporaryMatchSessionInfoRepository.save(temporaryMatchSessionInfo);
         log.debug("Saved TemporaryMatchInfo : " + savedTemporaryMatchSessionInfo);
+        fartherRequest.setTempSessionId(temporaryMatchSessionInfo.getSessionId());
+        nearerRequest.setTempSessionId(temporaryMatchSessionInfo.getSessionId());
 
         Map<String, MatchResultInfoDTO> infoDTOMap = new HashMap<>();
 
