@@ -141,6 +141,7 @@ public class MatchedServiceImpl implements MatchedService {
 
         waypointMatchInfoMember.setPaymentAmount(taxiFares.getWaypointFare());
         destinationMatchInfoMember.setPaymentAmount(taxiFares.getDestinationFare());
+        matchSessionInfoRepository.delete(matchSessionInfo);
 
         return SettlementReceivedRequestDTO.builder()
                 .sessionId(settlementRequestDTO.getSessionId())
