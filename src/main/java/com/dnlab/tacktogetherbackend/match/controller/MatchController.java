@@ -53,11 +53,14 @@ public class MatchController {
         String opponentMatchRequestId = matchService.findMatchingMatchRequests(matchRequestId);
 
         // 매칭 조건이 맞으면 각 사용자들에게 매칭 정보 전송
-        if (!opponentMatchRequestId.isBlank()) {
+        if (opponentMatchRequestId != null && !opponentMatchRequestId.isBlank()) {
             log.info("Match Succeed!");
 
             // 매칭 결과 생성
             Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.handlePendingMatchedAndGetMatchResultInfos(matchRequestId, opponentMatchRequestId);
+            log.debug("resultInfoDTOMap : " + resultInfoDTOMap);
+            log.debug("opponentMatchRequestId : " + resultInfoDTOMap.get(opponentMatchRequestId));
+            log.debug("matchRequestId : " + resultInfoDTOMap.get(matchRequestId));
 
             // 매칭 결과를 각각 전송
             Map<String, Object> headers = Collections.singletonMap(headerEventType, "request");
