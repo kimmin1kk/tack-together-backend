@@ -22,9 +22,6 @@ public class MatchInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "date", nullable = false)
-    private Timestamp date;
-
     @Column(name = "origin", nullable = false)
     private String origin;
 
@@ -40,6 +37,9 @@ public class MatchInfo {
     @Column(name = "match_end_time")
     private Timestamp matchEndTime;
 
+    @Column(name = "riding_start_time")
+    private Timestamp ridingStartTime;
+
     @Column(name = "total_fare")
     private Integer totalFare;
 
@@ -51,13 +51,13 @@ public class MatchInfo {
     @ToString.Exclude
     private Set<MatchInfoMember> matchInfoMembers = new LinkedHashSet<>();
 
+
     @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
 
     @PrePersist
     public void prePersist() {
         this.createTime = TimestampUtil.getCurrentTime();
-        this.date = TimestampUtil.getCurrentTime();
     }
 
     @Builder
@@ -67,16 +67,13 @@ public class MatchInfo {
                      String destination,
                      String waypoints,
                      int totalDistance,
-                     Timestamp matchEndTime,
                      int totalFare,
                      RidingStatus status,
                      Set<MatchInfoMember> matchInfoMembers) {
-        this.date = date;
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
         this.totalDistance = totalDistance;
-        this.matchEndTime = matchEndTime;
         this.totalFare = totalFare;
         this.status = status;
         this.matchInfoMembers = matchInfoMembers;
