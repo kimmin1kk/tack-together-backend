@@ -51,6 +51,12 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public String addMatchRequest(MatchRequestDTO matchRequestDTO) {
+
+        // 이미 해당 사용자의 매칭 요청이 있을 경우 매칭 대기열에서 제거
+        if (isMatchRequestExistInActiveMatchRequests(matchRequestDTO.getUsername())) {
+            removeMatchRequestsByUsername(matchRequestDTO.getUsername());
+        }
+
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
@@ -338,5 +344,19 @@ public class MatchServiceImpl implements MatchService {
         return new MatchResponseDTO(MatchDecisionStatus.ACCEPTED, matchSessionInfo.getSessionId());
     }
 
+    private boolean isMatchRequestExistInActiveMatchRequests(String username) {
+        return activeMatchRequests.keySet()
+                .stream()
+                .map(activeMatchRequests::get)
+                .anyMatch(matchRequest -> matchRequest.getUsername().equals(username));
+    }
 
+    private void removeMatchRequestsByUsername(String username) {
+        log.debug("removeMatchRequestsByUsername 이 username:" + username + " 에 의해 호출됨");
+        activeMatchRequests.keySet()
+                .stream()
+                .map(activeMatchRequests::get)
+                .filter(matchRequest -> matchRequest.getUsername().equals(username))
+                .forEach(matchRequest -> activeMatchRequests.remove(matchRequest.getId()));
+    }
 }
