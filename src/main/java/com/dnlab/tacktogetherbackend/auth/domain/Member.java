@@ -50,6 +50,7 @@ public class Member {
     private Timestamp updateTime;
 
     @Builder
+    @SuppressWarnings("squid:S107")
     public Member(Long id, String username, String password, String name,String nickname, boolean enabled, List<Authority> authorities, String refreshToken) {
         this.id = id;
         this.username = username;

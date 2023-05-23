@@ -38,6 +38,7 @@ public class TemporaryMatchSessionInfo implements Serializable {
     private int expiredTime;
 
     @Builder
+    @SuppressWarnings("squid:S107")
     public TemporaryMatchSessionInfo(String sessionId, String origin, String destination, String waypoints, int destinationDistance, int waypointDistance, String destinationMatchRequestId, String waypointMatchRequestId, int expiredTime) {
         this.sessionId = sessionId;
         this.origin = origin;
