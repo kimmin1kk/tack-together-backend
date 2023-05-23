@@ -22,6 +22,7 @@ public class HistoryDetailDTO implements Serializable { //히스토리 자세히
     private String savedCost;
 
     @Builder
+    @SuppressWarnings("squid:S107")
     public HistoryDetailDTO(long date, String origin, String waypoints, String destination, long startTime, Duration rideDuration, long endTime, String opponentMember, String savedCost) {
         this.date = date;
         this.origin = origin;
