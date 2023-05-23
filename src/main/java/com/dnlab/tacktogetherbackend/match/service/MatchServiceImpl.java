@@ -103,14 +103,8 @@ public class MatchServiceImpl implements MatchService {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         MatchRequest opponentMatchRequest = getMatchRequestById(opponentMatchRequestId).orElseThrow(NoSuchMatchRequestException::new);
 
-        // MatchRequest 들을 각각 매칭 된 상태로 변경
-        matchRequest.setMatched(true);
-        matchRequest.setOpponentMatchRequestId(opponentMatchRequest.getId());
-        matchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
-
-        opponentMatchRequest.setMatched(true);
-        opponentMatchRequest.setOpponentMatchRequestId(matchRequest.getId());
-        opponentMatchRequest.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
+        matchRequest.updateStatusToMatched(opponentMatchRequest);
+        opponentMatchRequest.updateStatusToMatched(matchRequest);
 
         // 임시 매칭 정보를 Redis 에 저장
         String sessionId = UUID.randomUUID().toString();
@@ -255,6 +249,16 @@ public class MatchServiceImpl implements MatchService {
                 && isSuitableDestinations(originReq, targetReq);
     }
 
+    @Override
+    public void cancelSearchingByUsername(String username) {
+        log.debug("removeMatchRequestsByUsername 이 username:" + username + " 에 의해 호출됨");
+        activeMatchRequests.keySet()
+                .stream()
+                .map(activeMatchRequests::get)
+                .filter(matchRequest -> matchRequest.getUsername().equals(username))
+                .forEach(matchRequest -> activeMatchRequests.remove(matchRequest.getId()));
+    }
+
     private boolean isSuitableOriginRanges(MatchRequest req1, MatchRequest req2) {
         short minRange = (req1.getOriginRange() > req2.getOriginRange()) ? req2.getOriginRange() : req1.getOriginRange();
         return matchRangeProperties.convertRangeLevelToRange(minRange, RangeKind.ORIGIN) > calculateDistance(req1.getOrigin(), req2.getOrigin());
@@ -308,33 +312,9 @@ public class MatchServiceImpl implements MatchService {
         MatchRequest fartherReq = activeMatchRequests.get(tempMatchInfo.getDestinationMatchRequestId());
         MatchRequest nearerReq = activeMatchRequests.get(tempMatchInfo.getWaypointMatchRequestId());
 
-        MatchInfo matchInfo = MatchInfo.builder()
-                .origin(tempMatchInfo.getOrigin())
-                .destination(tempMatchInfo.getDestination())
-                .waypoints(tempMatchInfo.getWaypoints())
-                .totalDistance(tempMatchInfo.getDestinationDistance())
-                .status(RidingStatus.WAITING)
-                .build();
+        MatchInfo matchInfo = saveMatchInfo(tempMatchInfo, fartherReq, nearerReq);
 
-        matchInfoRepository.save(matchInfo);
-        matchInfoMemberRepository.save(MatchInfoMember.builder()
-                .destination(fartherReq.getDestination())
-                .distance(tempMatchInfo.getDestinationDistance())
-                .matchInfo(matchInfo)
-                .member(memberRepository.findMemberByUsername(fartherReq.getUsername()).orElseThrow())
-                .build());
-
-        matchInfoMemberRepository.save(MatchInfoMember.builder()
-                .destination(nearerReq.getDestination())
-                .distance(tempMatchInfo.getWaypointDistance())
-                .matchInfo(matchInfo)
-                .member(memberRepository.findMemberByUsername(nearerReq.getUsername()).orElseThrow())
-                .build());
-
-        Set<SessionMemberInfo> sessionMemberInfos = new HashSet<>();
-        sessionMemberInfos.add(new SessionMemberInfo(fartherReq.getUsername(), false));
-        sessionMemberInfos.add(new SessionMemberInfo(nearerReq.getUsername(), false));
-        MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos, matchInfo.getId()));
+        MatchSessionInfo matchSessionInfo = saveMatchSessionInfo(fartherReq, nearerReq, matchInfo.getId());
 
         activeMatchRequests.remove(fartherReq.getId());
         activeMatchRequests.remove(nearerReq.getId());
@@ -344,6 +324,45 @@ public class MatchServiceImpl implements MatchService {
         return new MatchResponseDTO(MatchDecisionStatus.ACCEPTED, matchSessionInfo.getSessionId());
     }
 
+    private MatchSessionInfo saveMatchSessionInfo(MatchRequest fartherRequest,
+                                                  MatchRequest nearerRequest,
+                                                  long matchInfoId) {
+        Set<SessionMemberInfo> sessionMemberInfos = new HashSet<>();
+        sessionMemberInfos.add(new SessionMemberInfo(fartherRequest.getUsername(), false));
+        sessionMemberInfos.add(new SessionMemberInfo(nearerRequest.getUsername(), false));
+        return matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos, matchInfoId));
+    }
+
+    private MatchInfo saveMatchInfo(TemporaryMatchSessionInfo temporaryMatchSessionInfo,
+                                    MatchRequest fartherRequest,
+                                    MatchRequest nearerRequest) {
+
+        MatchInfo matchInfo = MatchInfo.builder()
+                .origin(temporaryMatchSessionInfo.getOrigin())
+                .destination(temporaryMatchSessionInfo.getDestination())
+                .waypoints(temporaryMatchSessionInfo.getWaypoints())
+                .totalDistance(temporaryMatchSessionInfo.getDestinationDistance())
+                .status(RidingStatus.WAITING)
+                .build();
+
+        matchInfoRepository.save(matchInfo);
+        matchInfoMemberRepository.save(MatchInfoMember.builder()
+                .destination(fartherRequest.getDestination())
+                .distance(temporaryMatchSessionInfo.getDestinationDistance())
+                .matchInfo(matchInfo)
+                .member(memberRepository.findMemberByUsername(fartherRequest.getUsername()).orElseThrow())
+                .build());
+
+        matchInfoMemberRepository.save(MatchInfoMember.builder()
+                .destination(nearerRequest.getDestination())
+                .distance(temporaryMatchSessionInfo.getWaypointDistance())
+                .matchInfo(matchInfo)
+                .member(memberRepository.findMemberByUsername(nearerRequest.getUsername()).orElseThrow())
+                .build());
+
+        return matchInfo;
+    }
+
     private boolean isMatchRequestExistInActiveMatchRequests(String username) {
         return activeMatchRequests.keySet()
                 .stream()
@@ -351,13 +370,4 @@ public class MatchServiceImpl implements MatchService {
                 .anyMatch(matchRequest -> matchRequest.getUsername().equals(username));
     }
 
-    @Override
-    public void cancelSearchingByUsername(String username) {
-        log.debug("removeMatchRequestsByUsername 이 username:" + username + " 에 의해 호출됨");
-        activeMatchRequests.keySet()
-                .stream()
-                .map(activeMatchRequests::get)
-                .filter(matchRequest -> matchRequest.getUsername().equals(username))
-                .forEach(matchRequest -> activeMatchRequests.remove(matchRequest.getId()));
-    }
 }
