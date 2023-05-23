@@ -59,7 +59,7 @@ public class MatchServiceImpl implements MatchService {
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
-        log.info("MatchRequest is added, " + matchRequest);
+        log.info("매칭 대기열이 추가됨 : {" + matchRequest + "}");
         return matchRequest.getId();
     }
 
@@ -76,7 +76,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public String findMatchingMatchRequests(String matchRequestId) {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
-        log.info("finding MatchRequest");
+        log.info("적합한 요청 찾는 중 ...");
         // 매칭 로직 구현
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
                 .filter(key -> !key.equals(matchRequestId))
@@ -92,7 +92,7 @@ public class MatchServiceImpl implements MatchService {
             return null;
         }
 
-        log.info("matched match request info : " + opponentMatchRequest);
+        log.info("매칭 된 match request info : {" + opponentMatchRequest + "}");
         return opponentMatchRequest.getId();
     }
 
@@ -109,6 +109,7 @@ public class MatchServiceImpl implements MatchService {
 
         TemporaryMatchSessionInfo temporaryMatchSessionInfo = temporaryMatchSessionInfoRepository
                 .save(TemporaryMatchSessionInfo.ofPostMatchTemporaryInfo(postMatchTemporaryInfo, redisProperties.getTtl()));
+        log.debug("TemporaryMatchSessionInfo 가 저장됨 : {" + temporaryMatchSessionInfo + "}");
 
         matchRequest.setTempSessionId(temporaryMatchSessionInfo.getSessionId());
         opponentMatchRequest.setTempSessionId(temporaryMatchSessionInfo.getSessionId());
@@ -154,7 +155,7 @@ public class MatchServiceImpl implements MatchService {
                         .paymentRate(paymentRate.getDestinationRate())
                         .opponentPaymentRate(paymentRate.getWaypointRate())
                         .build());
-        log.debug("infoDTOMap : " + infoDTOMap);
+        log.debug("반환되는 infoDTOMap : {" + infoDTOMap + "}");
 
         return infoDTOMap;
     }
@@ -201,7 +202,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void cancelSearchingByUsername(String username) {
-        log.debug("removeMatchRequestsByUsername 이 username:" + username + " 에 의해 호출됨");
+        log.debug("removeMatchRequestsByUsername 이 username{" + username + "} 에 의해 호출됨");
         activeMatchRequests.keySet()
                 .stream()
                 .map(activeMatchRequests::get)
@@ -254,10 +255,10 @@ public class MatchServiceImpl implements MatchService {
     }
 
     private MatchResponseDTO handleAcceptedMatchedRequests(String sessionId) {
-        log.debug("handleAcceptedMatchedRequests 메소드가 호출되었습니다.");
+        log.debug("handleAcceptedMatchedRequests 메소드가 호출됨");
 
         TemporaryMatchSessionInfo tempMatchInfo = temporaryMatchSessionInfoRepository.findById(sessionId).orElseThrow();
-        log.debug("Found TemporaryMatchInfo : " + tempMatchInfo);
+        log.debug("handleAcceptedMatchedRequests 에서 조회 된 TemporaryMatchInfo : {" + tempMatchInfo + "}");
 
         MatchRequest fartherReq = activeMatchRequests.get(tempMatchInfo.getDestinationMatchRequestId());
         MatchRequest nearerReq = activeMatchRequests.get(tempMatchInfo.getWaypointMatchRequestId());

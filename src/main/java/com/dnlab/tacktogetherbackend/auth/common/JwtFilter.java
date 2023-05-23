@@ -26,13 +26,11 @@ public class JwtFilter extends GenericFilterBean {
 
         // 유효성 검증
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-            // 토큰에서 유저네임, 권한을 받아 스프링 시큐리티 유저를 만들어 Authentication 반환
             Authentication authentication = tokenProvider.getAuthentication(jwt);
-            // 해당 스프링 시큐리티 유저를 시큐리티 컨텍스트에 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Security Context 에 " + authentication.getName() + " 인증 정보를 저장했습니다.");
+            log.debug("Security Context 에 " + authentication.getName() + " 인증 정보가 저장됨");
         } else {
-            log.debug("유효한 JWT 토큰이 없습니다");
+            log.debug("유효한 JWT 토큰이 발견되지 않음");
         }
 
         filterChain.doFilter(servletRequest, servletResponse);

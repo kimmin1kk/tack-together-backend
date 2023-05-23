@@ -60,9 +60,6 @@ public class MatchController {
             // 매칭 결과 생성
             PostMatchTemporaryInfo postMatchTemporaryInfo = matchService.handlePendingMatched(matchRequestId, opponentMatchRequestId);
             Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.getMatchResultInfoMap(postMatchTemporaryInfo);
-            log.debug("resultInfoDTOMap : " + resultInfoDTOMap);
-            log.debug("opponentMatchRequestId : " + resultInfoDTOMap.get(opponentMatchRequestId));
-            log.debug("matchRequestId : " + resultInfoDTOMap.get(matchRequestId));
 
             // 매칭 결과를 각각 전송
             Map<String, Object> headers = Collections.singletonMap(headerEventType, "request");
