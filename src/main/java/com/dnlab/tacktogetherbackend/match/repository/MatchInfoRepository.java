@@ -17,4 +17,5 @@ public interface MatchInfoRepository extends JpaRepository<MatchInfo, Long> {
             "WHERE mim.member.username = :username)")
     List<MatchInfo> findMatchInfosByMemberUsername(@Param("username") String username);
 
+    MatchInfo findMatchInfoByMemberUsername(String username);
 }

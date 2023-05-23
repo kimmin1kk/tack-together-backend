@@ -1,15 +1,13 @@
 package com.dnlab.tacktogetherbackend.history.controller;
 
-import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
 import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
 import com.dnlab.tacktogetherbackend.history.service.HistoryService;
-import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/history")
@@ -21,13 +19,15 @@ public class HistoryController {
 
     @GetMapping("/simple")
     //이용기록 간단하게
-    public ResponseEntity<List<MatchInfo>> handleSimpleHistoryRequest(Principal principal) {
+    public ResponseEntity<HistorySummaryDTO> handleHistorySummaryRequest(Principal principal) {
         return ResponseEntity.ok(historyService.getHistorySummaryByUsername(principal.getName()));
     }
-//    //이용기록 자세하게
-//    @GetMapping("detail")
-//    public ResponseEntity<HistoryDetailDTO> handleDetailHistoryRequest(Principal principal) {
-//        return ResponseEntity.ok(historyService.getHistoryDetailByUsername(principal.getName()));
-//    }
+
+    @GetMapping("/detail")
+    //이용기록 자세하게
+    public ResponseEntity<HistoryDetailDTO> handleHistoryDetailRequest(Principal principal) {
+        return ResponseEntity.ok(historyService.getHistoryDetailByUsername(principal.getName()));
+    }
+
 
 }
