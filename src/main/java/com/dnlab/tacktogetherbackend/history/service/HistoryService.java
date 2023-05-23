@@ -1,10 +1,11 @@
 package com.dnlab.tacktogetherbackend.history.service;
 
-import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
-import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
+
+import java.util.List;
 
 public interface HistoryService {
-    HistorySummaryDTO getHistorySummaryByUsername(String username);
-    HistoryDetailDTO getHistoryDetailByUsername(String username);
+    List<MatchInfo> getHistorySummaryByUsername(String username);
+//    MatchInfo getHistoryDetailByUsername(String username);
 
 }
