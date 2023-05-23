@@ -69,6 +69,11 @@ public class MatchController {
         }
     }
 
+    @MessageMapping("/match/cancel-search")
+    public void handleCancelingSearch(Principal principal) {
+        matchService.cancelSearchingByUsername(principal.getName());
+    }
+
     // 매칭 수락 처리
     // 결합도가 높음
     @MessageMapping("/match/accept")

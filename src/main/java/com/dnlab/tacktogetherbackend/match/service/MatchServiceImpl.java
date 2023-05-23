@@ -54,7 +54,7 @@ public class MatchServiceImpl implements MatchService {
 
         // 이미 해당 사용자의 매칭 요청이 있을 경우 매칭 대기열에서 제거
         if (isMatchRequestExistInActiveMatchRequests(matchRequestDTO.getUsername())) {
-            removeMatchRequestsByUsername(matchRequestDTO.getUsername());
+            cancelSearchingByUsername(matchRequestDTO.getUsername());
         }
 
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
@@ -351,7 +351,8 @@ public class MatchServiceImpl implements MatchService {
                 .anyMatch(matchRequest -> matchRequest.getUsername().equals(username));
     }
 
-    private void removeMatchRequestsByUsername(String username) {
+    @Override
+    public void cancelSearchingByUsername(String username) {
         log.debug("removeMatchRequestsByUsername 이 username:" + username + " 에 의해 호출됨");
         activeMatchRequests.keySet()
                 .stream()

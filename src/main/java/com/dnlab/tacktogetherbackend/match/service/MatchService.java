@@ -17,4 +17,5 @@ public interface MatchService {
     MatchResponseDTO acceptMatch(String matchRequestId);
     void rejectMatch(String matchRequestId);
     void resetMatchRequests();
+    void cancelSearchingByUsername(String username);
 }
