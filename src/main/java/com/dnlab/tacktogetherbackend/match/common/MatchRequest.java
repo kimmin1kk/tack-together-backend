@@ -52,6 +52,12 @@ public class MatchRequest implements Serializable {
         this.destinationRange = dto.getDestinationRange();
     }
 
+    public void updateStatusToMatched(MatchRequest opponentMatchRequest) {
+        this.matched = true;
+        this.opponentMatchRequestId = opponentMatchRequest.getId();
+        this.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
+    }
+
     private String generateRequestId(String username) {
         return username + "-" + UUID.randomUUID();
     }
