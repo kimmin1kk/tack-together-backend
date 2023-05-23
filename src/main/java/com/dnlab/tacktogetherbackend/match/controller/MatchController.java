@@ -2,6 +2,7 @@ package com.dnlab.tacktogetherbackend.match.controller;
 
 import com.dnlab.tacktogetherbackend.match.common.MatchDecisionStatus;
 import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
+import com.dnlab.tacktogetherbackend.match.common.PostMatchTemporaryInfo;
 import com.dnlab.tacktogetherbackend.match.dto.MatchRequestDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResultInfoDTO;
 import com.dnlab.tacktogetherbackend.match.dto.MatchResponseDTO;
@@ -57,7 +58,8 @@ public class MatchController {
             log.info("Match Succeed!");
 
             // 매칭 결과 생성
-            Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.handlePendingMatchedAndGetMatchResultInfos(matchRequestId, opponentMatchRequestId);
+            PostMatchTemporaryInfo postMatchTemporaryInfo = matchService.handlePendingMatched(matchRequestId, opponentMatchRequestId);
+            Map<String, MatchResultInfoDTO> resultInfoDTOMap = matchService.getMatchResultInfoMap(postMatchTemporaryInfo);
             log.debug("resultInfoDTOMap : " + resultInfoDTOMap);
             log.debug("opponentMatchRequestId : " + resultInfoDTOMap.get(opponentMatchRequestId));
             log.debug("matchRequestId : " + resultInfoDTOMap.get(matchRequestId));

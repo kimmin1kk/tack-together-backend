@@ -1,5 +1,6 @@
 package com.dnlab.tacktogetherbackend.match.common;
 
+import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.ResponseDirections;
 import com.dnlab.tacktogetherbackend.match.config.MinimumFareProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TaxiFareCalculator {
     private final MinimumFareProperties minimumFareProperties;
+
+    public int getFareByResponseDirections(ResponseDirections responseDirections) {
+        return responseDirections.getRoutes()
+                .stream().findFirst().orElseThrow()
+                .getSummary()
+                .getFare()
+                .getTaxi();
+    }
 
     public TaxiFares calculateFare(int totalFare,
                                    int waypointDistance,
