@@ -221,10 +221,10 @@ public class MatchServiceImpl implements MatchService {
     public MatchResponseDTO acceptMatch(String matchRequestId) {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.ACCEPTED);
-        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
+        MatchRequest opponentMatchRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
 
-        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
-            return handleAcceptedMatchedRequests(matchedRequest.getTempSessionId());
+        if (opponentMatchRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
+            return handleAcceptedMatchedRequests(opponentMatchRequest.getTempSessionId());
         }
 
         return new MatchResponseDTO(MatchDecisionStatus.WAITING);
@@ -235,12 +235,12 @@ public class MatchServiceImpl implements MatchService {
         // 매칭 거절 로직
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         matchRequest.setMatchDecisionStatus(MatchDecisionStatus.REJECTED);
-        MatchRequest matchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
+        MatchRequest opponentMatchedRequest = activeMatchRequests.get(matchRequest.getOpponentMatchRequestId());
 
         matchRequest.setMatched(false);
         matchRequest.setMatchDecisionStatus(null);
-        matchedRequest.setMatched(false);
-        matchedRequest.setMatchDecisionStatus(null);
+        opponentMatchedRequest.setMatched(false);
+        opponentMatchedRequest.setMatchDecisionStatus(null);
         temporaryMatchSessionInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
     }
 
@@ -249,10 +249,10 @@ public class MatchServiceImpl implements MatchService {
         activeMatchRequests.clear();
     }
 
-    private boolean isSuitableRequests(MatchRequest originReg, MatchRequest targetReq) {
+    private boolean isSuitableRequests(MatchRequest originReq, MatchRequest targetReq) {
         return !targetReq.isMatched()
-                && isSuitableOriginRanges(originReg, targetReq)
-                && isSuitableDestinations(originReg, targetReq);
+                && isSuitableOriginRanges(originReq, targetReq)
+                && isSuitableDestinations(originReq, targetReq);
     }
 
     private boolean isSuitableOriginRanges(MatchRequest req1, MatchRequest req2) {

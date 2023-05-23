@@ -81,14 +81,14 @@ public class MatchController {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
         log.debug("matchRequestId (/match/accept): " + matchRequestId);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
-        MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
+        MatchRequest opponentMatchRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
 
         MatchResponseDTO matchResponseDTO = matchService.acceptMatch(matchRequestId);
 
         Map<String, Object> headers = Collections.singletonMap(headerEventType, "accept");
-        if (matchedRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
+        if (opponentMatchRequest.getMatchDecisionStatus().equals(MatchDecisionStatus.ACCEPTED)) {
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
-            messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
+            messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
         } else {
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
         }
@@ -99,13 +99,13 @@ public class MatchController {
     public void handleReject(SimpMessageHeaderAccessor headerAccessor) {
         String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
         MatchRequest matchRequest = matchService.getMatchRequestById(matchRequestId).orElseThrow();
-        MatchRequest matchedRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
+        MatchRequest opponentMatchRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
         matchService.rejectMatch(matchRequestId);
 
         MatchResponseDTO payload = new MatchResponseDTO(MatchDecisionStatus.REJECTED);
         Map<String, Object> headers = Collections.singletonMap(headerEventType, "reject");
         messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
-        messagingTemplate.convertAndSendToUser(matchedRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
+        messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
     }
 
     // WebSocket 연결 해제 처리

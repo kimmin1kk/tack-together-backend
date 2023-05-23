@@ -13,7 +13,7 @@ public interface MatchService {
     Optional<MatchRequest> getMatchRequestById(String matchRequestId);
     void removeRideRequest(String matchRequestId);
     String findMatchingMatchRequests(String matchRequestId);
-    Map<String, MatchResultInfoDTO> handlePendingMatchedAndGetMatchResultInfos(String matchRequestId, String matchedMatchRequestsId);
+    Map<String, MatchResultInfoDTO> handlePendingMatchedAndGetMatchResultInfos(String matchRequestId, String opponentMatchRequestId);
     MatchResponseDTO acceptMatch(String matchRequestId);
     void rejectMatch(String matchRequestId);
     void resetMatchRequests();
