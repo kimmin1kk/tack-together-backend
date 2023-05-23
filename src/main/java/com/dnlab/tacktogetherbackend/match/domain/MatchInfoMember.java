@@ -50,6 +50,7 @@ public class MatchInfoMember {
     }
 
     @Builder
+    @SuppressWarnings("squid:S107")
     public MatchInfoMember(Long id, MatchInfo matchInfo, Member member, String destination, int paymentAmount, int distance, Timestamp createTime, Timestamp dropOffTime) {
         this.id = id;
         this.matchInfo = matchInfo;

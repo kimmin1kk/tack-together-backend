@@ -23,7 +23,6 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String jwt = tokenProvider.resolveToken(httpServletRequest);
-        String requestURI = httpServletRequest.getRequestURI();
 
         // 유효성 검증
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
@@ -31,10 +30,9 @@ public class JwtFilter extends GenericFilterBean {
             Authentication authentication = tokenProvider.getAuthentication(jwt);
             // 해당 스프링 시큐리티 유저를 시큐리티 컨텍스트에 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Security Context 에 " + authentication.getName() + " 인증 정보를 저장했습니다, uri: " + requestURI);
+            log.debug("Security Context 에 " + authentication.getName() + " 인증 정보를 저장했습니다.");
         } else {
-            log.debug("Header" + jwt);
-            log.debug("유효한 JWT 토큰이 없습니다, uri: " + requestURI);
+            log.debug("유효한 JWT 토큰이 없습니다");
         }
 
         filterChain.doFilter(servletRequest, servletResponse);

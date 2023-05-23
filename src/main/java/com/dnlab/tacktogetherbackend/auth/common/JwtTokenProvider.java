@@ -20,7 +20,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -121,9 +120,7 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
         // http request 헤더 토큰
         String bearerToken = request.getHeader(authorizationHeader);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            String token = bearerToken.substring(7);
-            log.info(token);
-            return token;
+            return bearerToken.substring(7);
         }
 
         // 쿼리 파라미터 토큰
@@ -145,8 +142,6 @@ public class JwtTokenProvider { // JWT 토큰을 생성 및 검증 모듈
     }
 
     private String resolveTokenByParameter(HttpServletRequest request) {
-        String accessToken = request.getParameter("token");
-        log.debug("accessToken : " + accessToken);
-        return accessToken;
+        return request.getParameter("token");
     }
 }

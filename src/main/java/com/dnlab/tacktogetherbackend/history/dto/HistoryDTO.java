@@ -22,6 +22,7 @@ public class HistoryDTO { //히스토리 자세히 DTO
     private String savedCost;
 
     @Builder
+    @SuppressWarnings("squid:S107")
     public HistoryDTO(Timestamp date, String origin, String waypoints,String destination, Timestamp startTime, Duration rideDuration, Timestamp endTime, String opponentMember, String savedCost) {
         this.date = date;
         this.origin = origin;
