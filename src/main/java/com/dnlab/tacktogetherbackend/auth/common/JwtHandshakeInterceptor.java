@@ -20,7 +20,8 @@ public class JwtHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+        log.debug("beforeHandshake 가 호출되었습니다.");
         if (request instanceof ServletServerHttpRequest) {
             String jwt = jwtTokenProvider.resolveToken(request);
 
