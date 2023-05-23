@@ -4,25 +4,25 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
+import java.io.Serializable;
 import java.time.Duration;
 
 
 @Data
 @NoArgsConstructor
-public class HistoryDTO { //히스토리 자세히 DTO
-    private Timestamp date;
+public class HistoryDetailDTO implements Serializable { //히스토리 자세히 DTO
+    private long date;
     private String origin;
     private String waypoints;
     private String destination;
-    private Timestamp startTime;
+    private long startTime;
     private Duration rideDuration;
-    private Timestamp endTime;
+    private long endTime;
     private String opponentMember;
     private String savedCost;
 
     @Builder
-    public HistoryDTO(Timestamp date, String origin, String waypoints,String destination, Timestamp startTime, Duration rideDuration, Timestamp endTime, String opponentMember, String savedCost) {
+    public HistoryDetailDTO(long date, String origin, String waypoints, String destination, long startTime, Duration rideDuration, long endTime, String opponentMember, String savedCost) {
         this.date = date;
         this.origin = origin;
         this.waypoints = waypoints;
