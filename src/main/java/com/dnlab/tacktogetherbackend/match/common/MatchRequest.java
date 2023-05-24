@@ -58,6 +58,11 @@ public class MatchRequest implements Serializable {
         this.setMatchDecisionStatus(MatchDecisionStatus.WAITING);
     }
 
+    public void resetStatus() {
+        this.matched = false;
+        this.matchDecisionStatus = null;
+    }
+
     private String generateRequestId(String username) {
         return username + "-" + UUID.randomUUID();
     }

@@ -6,7 +6,9 @@ import lombok.Data;
 @Data
 @Builder
 public class TaxiFares {
-   private int totalFare;
-   private int waypointFare;
-   private int destinationFare;
+   private final int totalFare;
+   private final int waypointFare;
+   private final int destinationFare;
+   private final double waypointRate;
+   private final double destinationRate;
 }

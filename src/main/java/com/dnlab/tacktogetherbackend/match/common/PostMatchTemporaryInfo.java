@@ -4,10 +4,8 @@ import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.Response
 import com.dnlab.tacktogetherbackend.kakao.service.KakaoMapService;
 import lombok.Getter;
 
-import java.io.Serializable;
-
 @Getter
-public class PostMatchTemporaryInfo implements Serializable {
+public class PostMatchTemporaryInfo {
     private final MatchRequest fartherRequest;
     private final MatchRequest nearerRequest;
     private final ResponseDirections fixedDirections;
@@ -24,6 +22,11 @@ public class PostMatchTemporaryInfo implements Serializable {
         this.fixedDirections = fixedDirections;
         this.waypointDistance = waypointDistance;
         this.destinationDistance = destinationDistance;
+    }
+
+    public void setTemporarySessionId(String sessionId) {
+        this.fartherRequest.setTempSessionId(sessionId);
+        this.nearerRequest.setTempSessionId(sessionId);
     }
 
     public static PostMatchTemporaryInfo of(MatchRequest matchRequest1, MatchRequest matchRequest2,

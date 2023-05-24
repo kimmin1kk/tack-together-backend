@@ -23,6 +23,10 @@ public interface KakaoMapService {
         return getDistance(RequestDirections.ofMatchRequest(matchRequest));
     }
 
+    default int getDistance(MatchRequest matchRequest1, MatchRequest matchRequest2) {
+        return getDistance(getRoute(matchRequest1, matchRequest2));
+    }
+
     default int getDistance(ResponseDirections responseDirections) {
         return responseDirections.getRoutes()
                 .stream()
