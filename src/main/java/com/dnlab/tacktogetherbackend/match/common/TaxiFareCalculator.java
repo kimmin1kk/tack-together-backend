@@ -35,24 +35,8 @@ public class TaxiFareCalculator {
                 .totalFare(totalFare)
                 .destinationFare(destinationFare)
                 .waypointFare(waypointFare)
-                .build();
-    }
-
-    public PaymentRate calculatePaymentRate(int totalFare,
-                                            int waypointDistance,
-                                            int destinationDistance) {
-        TaxiFares taxiFares = calculateFare(totalFare, waypointDistance, destinationDistance);
-
-        return PaymentRate.builder()
-                .destinationRate((double) taxiFares.getDestinationFare() / totalFare * 100)
-                .waypointRate((double) taxiFares.getWaypointFare() / totalFare * 100)
-                .build();
-    }
-
-    public PaymentRate calculatePaymentRate(TaxiFares taxiFares) {
-        return PaymentRate.builder()
-                .destinationRate((double) taxiFares.getDestinationFare() / taxiFares.getTotalFare() * 100)
-                .waypointRate((double) taxiFares.getWaypointFare() / taxiFares.getTotalFare() * 100)
+                .destinationRate((double) destinationFare / totalFare * 100)
+                .waypointRate((double) waypointFare / totalFare * 100)
                 .build();
     }
 }
