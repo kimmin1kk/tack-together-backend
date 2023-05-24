@@ -1,5 +1,6 @@
 package com.dnlab.tacktogetherbackend.match.domain.redis;
 
+import com.dnlab.tacktogetherbackend.match.common.PostMatchTemporaryInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -39,8 +41,8 @@ public class TemporaryMatchSessionInfo implements Serializable {
 
     @Builder
     @SuppressWarnings("squid:S107")
-    public TemporaryMatchSessionInfo(String sessionId, String origin, String destination, String waypoints, int destinationDistance, int waypointDistance, String destinationMatchRequestId, String waypointMatchRequestId, int expiredTime) {
-        this.sessionId = sessionId;
+    public TemporaryMatchSessionInfo(String origin, String destination, String waypoints, int destinationDistance, int waypointDistance, String destinationMatchRequestId, String waypointMatchRequestId, int expiredTime) {
+        this.sessionId = UUID.randomUUID().toString();
         this.origin = origin;
         this.destination = destination;
         this.waypoints = waypoints;
@@ -49,5 +51,19 @@ public class TemporaryMatchSessionInfo implements Serializable {
         this.destinationMatchRequestId = destinationMatchRequestId;
         this.waypointMatchRequestId = waypointMatchRequestId;
         this.expiredTime = expiredTime;
+    }
+
+    public static TemporaryMatchSessionInfo ofPostMatchTemporaryInfo(PostMatchTemporaryInfo postMatchTemporaryInfo,
+                                                                     int expiredTime) {
+        return TemporaryMatchSessionInfo.builder()
+                .origin(postMatchTemporaryInfo.getFartherRequest().getOrigin())
+                .destination(postMatchTemporaryInfo.getFartherRequest().getDestination())
+                .waypoints(postMatchTemporaryInfo.getNearerRequest().getDestination())
+                .destinationDistance(postMatchTemporaryInfo.getDestinationDistance())
+                .waypointDistance(postMatchTemporaryInfo.getWaypointDistance())
+                .destinationMatchRequestId(postMatchTemporaryInfo.getFartherRequest().getOpponentMatchRequestId())
+                .waypointMatchRequestId(postMatchTemporaryInfo.getNearerRequest().getOpponentMatchRequestId())
+                .expiredTime(expiredTime)
+                .build();
     }
 }
