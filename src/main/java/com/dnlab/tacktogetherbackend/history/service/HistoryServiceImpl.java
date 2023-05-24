@@ -3,6 +3,7 @@ package com.dnlab.tacktogetherbackend.history.service;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
 import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryListDTO;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
@@ -13,33 +14,42 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/*
- MatchInfo
- date, origin destination,waypoints, createTime, dropOffTime
+import java.util.List;
+import java.util.stream.Collectors;
 
- MatchInfoMember
- paymentAmount,distance
-*/
-
+/**
+ * MatchInfo
+ * date, origin destination,waypoints, createTime, dropOffTime
+ * MatchInfoMember
+ * paymentAmount,distance
+ */
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class HistoryServiceImpl implements HistoryService {
-    private final MemberRepository memberRepository;
     private final MatchInfoMemberRepository matchInfoMemberRepository;
     private final MatchInfoRepository matchInfoRepository;
 
-    // 히스토리 서비스에서는 get만 할 예정이므로 별 다른 서비스 로직이 필요하진 않을 것 같음
-    @Override //History 간단하게
+    @Override //요약된 이용기록 리스트 반환
     @Transactional(readOnly = true)
-    public HistorySummaryDTO getHistorySummaryByUsername(String username) {
-        log.info("MatchInfos : " + matchInfoRepository.findMatchInfosByMemberUsername(username));
+    public HistorySummaryListDTO getHistorySummaryListByUsername(String username) {
+        List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByMemberUsername(username);
 
-        MatchInfo matchInfo = matchInfoRepository.findMatchInfoByMemberUsername(username);
-        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByUsername(username);
+        return new HistorySummaryListDTO(matchInfos.stream()
+                .map(matchInfo -> convertMatchInfoToHistorySummaryDTO(matchInfo, username))
+                .collect(Collectors.toList()));
+    }
 
+    @Override
+    public HistoryDetailDTO getHistoryDetailByHistoryIdAndUsername(Long id, String username) {
+        return convertMatchInfoToHistoryDetailDTO(matchInfoRepository.findById(id).orElseThrow(), username);
+    }
+
+    private HistorySummaryDTO convertMatchInfoToHistorySummaryDTO(MatchInfo matchInfo, String username) {
+        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
         return HistorySummaryDTO.builder()
+                .id(matchInfo.getId())
                 .date(matchInfo.getCreateTime().getTime())
                 .origin(matchInfo.getOrigin())
                 .destination(matchInfo.getDestination())
@@ -47,15 +57,11 @@ public class HistoryServiceImpl implements HistoryService {
                 .build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public HistoryDetailDTO getHistoryDetailByUsername(String username) {
-        log.info("MatchInfos : " + matchInfoRepository.findMatchInfosByMemberUsername(username));
 
-        MatchInfo matchInfo = matchInfoRepository.findMatchInfoByMemberUsername(username);
-        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByUsername(username);
-
+    private HistoryDetailDTO convertMatchInfoToHistoryDetailDTO(MatchInfo matchInfo, String username) {
+        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
         return HistoryDetailDTO.builder()
+                .id(matchInfo.getId())
                 .date(matchInfo.getCreateTime().getTime())
                 .origin(matchInfo.getOrigin())
                 .waypoints(matchInfo.getWaypoints())
@@ -64,7 +70,7 @@ public class HistoryServiceImpl implements HistoryService {
                 .distance(matchInfo.getTotalDistance())
                 .dropOffTime(matchInfoMember.getDropOffTime().getTime())
                 .opponentMember(matchInfo.getMatchInfoMembers().toString())
-                .paymentAmount(String.valueOf(matchInfoMember.getPaymentAmount()))
+                .paymentAmount(matchInfoMember.getPaymentAmount())
                 .build();
     }
 
