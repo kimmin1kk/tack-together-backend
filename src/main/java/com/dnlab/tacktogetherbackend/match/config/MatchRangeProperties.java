@@ -21,7 +21,7 @@ public class MatchRangeProperties {
             case DESTINATION:
                 return convertDestinationRangeLevelToRange(rangeLevel);
             default:
-                throw new IllegalArgumentException("올바른 범위레벨 종류를 입력해주세요");
+                throw new IllegalArgumentException("올바르지 않은 매칭범위 종류");
         }
     }
 
