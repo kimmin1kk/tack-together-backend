@@ -53,8 +53,8 @@ public class TemporaryMatchSessionInfo implements Serializable {
         this.expiredTime = expiredTime;
     }
 
-    public static TemporaryMatchSessionInfo ofPostMatchTemporaryInfo(PostMatchTemporaryInfo postMatchTemporaryInfo,
-                                                                     int expiredTime) {
+    public static TemporaryMatchSessionInfo of(PostMatchTemporaryInfo postMatchTemporaryInfo,
+                                               int expiredTime) {
         return TemporaryMatchSessionInfo.builder()
                 .origin(postMatchTemporaryInfo.getFartherRequest().getOrigin())
                 .destination(postMatchTemporaryInfo.getFartherRequest().getDestination())
