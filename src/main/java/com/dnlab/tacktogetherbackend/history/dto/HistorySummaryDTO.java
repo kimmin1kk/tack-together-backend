@@ -6,7 +6,13 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/*
+ MatchInfo
+ date, origin destination
 
+ MatchInfoMember
+ paymentAmount
+*/
 @Data
 @NoArgsConstructor
 public class HistorySummaryDTO implements Serializable { //히스토리 간단히 DTO
