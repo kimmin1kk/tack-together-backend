@@ -1,5 +1,6 @@
 package com.dnlab.tacktogetherbackend.match.common;
 
+import com.dnlab.tacktogetherbackend.kakao.common.dto.responsedirection.ResponseDirections;
 import com.dnlab.tacktogetherbackend.match.config.MinimumFareProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TaxiFareCalculator {
     private final MinimumFareProperties minimumFareProperties;
+
+    public int getFareByResponseDirections(ResponseDirections responseDirections) {
+        return responseDirections.getRoutes()
+                .stream().findFirst().orElseThrow()
+                .getSummary()
+                .getFare()
+                .getTaxi();
+    }
 
     public TaxiFares calculateFare(int totalFare,
                                    int waypointDistance,
@@ -26,24 +35,8 @@ public class TaxiFareCalculator {
                 .totalFare(totalFare)
                 .destinationFare(destinationFare)
                 .waypointFare(waypointFare)
-                .build();
-    }
-
-    public PaymentRate calculatePaymentRate(int totalFare,
-                                            int waypointDistance,
-                                            int destinationDistance) {
-        TaxiFares taxiFares = calculateFare(totalFare, waypointDistance, destinationDistance);
-
-        return PaymentRate.builder()
-                .destinationRate((double) taxiFares.getDestinationFare() / totalFare * 100)
-                .waypointRate((double) taxiFares.getWaypointFare() / totalFare * 100)
-                .build();
-    }
-
-    public PaymentRate calculatePaymentRate(TaxiFares taxiFares) {
-        return PaymentRate.builder()
-                .destinationRate((double) taxiFares.getDestinationFare() / taxiFares.getTotalFare() * 100)
-                .waypointRate((double) taxiFares.getWaypointFare() / taxiFares.getTotalFare() * 100)
+                .destinationRate((double) destinationFare / totalFare * 100)
+                .waypointRate((double) waypointFare / totalFare * 100)
                 .build();
     }
 }

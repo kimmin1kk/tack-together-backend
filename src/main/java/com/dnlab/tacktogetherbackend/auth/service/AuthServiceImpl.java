@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
-        memberRepository.findMemberByUsername(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."))
+        memberRepository.findMemberByUsername(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없음"))
                 .setRefreshToken(refreshToken);
 
         return LoginResponseDTO.builder()
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public RegistrationResponseDTO signUp(RegistrationRequestDTO registrationDTO) {
         if (memberRepository.existsByUsername(registrationDTO.getUsername())) {
-            throw new DuplicateUsernameException("해당 유저네임이 이미 존재합니다");
+            throw new DuplicateUsernameException("이미 존재하는 username");
         }
 
         Member member = Member.builder()
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = refreshTokenRequestDTO.getRefreshToken();
         jwtTokenProvider.validateToken(refreshToken); // 유효성 검사
 
-        Member member = memberRepository.findMemberByRefreshToken(refreshToken).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다."));
+        Member member = memberRepository.findMemberByRefreshToken(refreshToken).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없음"));
 
         String newRefreshToken = jwtTokenProvider.createRefreshToken();
         member.setRefreshToken(newRefreshToken);
