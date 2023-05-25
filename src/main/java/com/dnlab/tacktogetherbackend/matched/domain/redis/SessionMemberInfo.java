@@ -11,5 +11,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class SessionMemberInfo implements Serializable {
     private String username;
+    private String nickname;
     private boolean departureAgreed;
 }
