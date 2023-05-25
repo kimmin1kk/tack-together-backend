@@ -82,6 +82,7 @@ public class MatchedServiceImpl implements MatchedService {
         MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
 
+        // 두 사용자의 이동 거리를 비교하여 waypointMember 와 destinationMember 결정
         MatchInfoMember waypointMember = matchInfoMembers.stream()
                 .min(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
@@ -109,11 +110,7 @@ public class MatchedServiceImpl implements MatchedService {
             destinationMember.setDistance(distance);
         }
 
-        return DropOffNotificationDTO.builder()
-                .dropOffLocation(dropOffRequestDTO.getEndLocation())
-                .sessionId(dropOffRequestDTO.getSessionId())
-                .username(username)
-                .build();
+        return DropOffNotificationDTO.of(dropOffRequestDTO, username);
     }
 
     private SessionMemberInfo getSessionMemberInfoByUsername(MatchSessionInfo matchSessionInfo, String username) {
