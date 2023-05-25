@@ -103,6 +103,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public MemberInfoResponseDTO getMemberInfoByUsername(String username) {
+        return MemberInfoResponseDTO.of(memberRepository.findMemberByUsername(username).orElseThrow());
+    }
+
+    @Override
     public CheckUsernameRequestDTO checkDuplicatedUsername(String username) {
         return new CheckUsernameRequestDTO(memberRepository.existsByUsername(username));
     }

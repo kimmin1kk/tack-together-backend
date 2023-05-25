@@ -10,4 +10,6 @@ public interface AuthService {
     LoginResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshTokenRequestDTO);
     CheckUsernameRequestDTO checkDuplicatedUsername(String username);
     boolean validAuthentication(HttpServletRequest request);
+
+    MemberInfoResponseDTO getMemberInfoByUsername(String username);
 }

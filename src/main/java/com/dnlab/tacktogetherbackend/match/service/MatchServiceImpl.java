@@ -1,5 +1,6 @@
 package com.dnlab.tacktogetherbackend.match.service;
 
+import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.global.common.RedisEntityProperties;
 import com.dnlab.tacktogetherbackend.kakao.common.dto.RequestDirections;
@@ -54,6 +55,8 @@ public class MatchServiceImpl implements MatchService {
             cancelSearchingByUsername(matchRequestDTO.getUsername());
         }
 
+        Member member = memberRepository.findMemberByUsername(matchRequestDTO.getUsername()).orElseThrow();
+        matchRequestDTO.setNickname(member.getNickname());
         MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
@@ -239,8 +242,8 @@ public class MatchServiceImpl implements MatchService {
                                                   MatchRequest nearerRequest,
                                                   long matchInfoId) {
         Set<SessionMemberInfo> sessionMemberInfos = new HashSet<>();
-        sessionMemberInfos.add(new SessionMemberInfo(fartherRequest.getUsername(), false));
-        sessionMemberInfos.add(new SessionMemberInfo(nearerRequest.getUsername(), false));
+        sessionMemberInfos.add(new SessionMemberInfo(fartherRequest.getUsername(), fartherRequest.getNickname(), false));
+        sessionMemberInfos.add(new SessionMemberInfo(nearerRequest.getUsername(), nearerRequest.getNickname(), false));
         return matchSessionInfoRepository.save(new MatchSessionInfo(sessionMemberInfos, matchInfoId));
     }
 

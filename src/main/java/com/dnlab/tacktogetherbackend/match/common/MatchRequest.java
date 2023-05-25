@@ -22,6 +22,9 @@ public class MatchRequest implements Serializable {
     private String username;
 
     @NotNull
+    private String nickname;
+
+    @NotNull
     private String origin;
 
     @NotNull
@@ -46,6 +49,7 @@ public class MatchRequest implements Serializable {
     public MatchRequest(MatchRequestDTO dto) {
         this.id = generateRequestId(dto.getUsername());
         this.username = dto.getUsername();
+        this.nickname = dto.getNickname();
         this.origin = dto.getOrigin();
         this.destination = dto.getDestination();
         this.originRange = dto.getOriginRange();

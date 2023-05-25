@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.security.Principal;
 
 @Slf4j
 @RestController
@@ -69,4 +70,8 @@ public class AuthController {
         return ResponseEntity.ok(new TestTokenResponseDTO(authService.validAuthentication(request)));
     }
 
+    @GetMapping("/member-info")
+    public ResponseEntity<MemberInfoResponseDTO> getMemberInfo(Principal principal) {
+        return ResponseEntity.ok(authService.getMemberInfoByUsername(principal.getName()));
+    }
 }
