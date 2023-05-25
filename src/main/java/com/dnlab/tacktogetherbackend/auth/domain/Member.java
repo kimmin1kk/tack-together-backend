@@ -31,7 +31,7 @@ public class Member {
     @Column(name = "name", nullable = false, length = 45)
     private String name;
 
-    @Column(name = "nickname", nullable = false, length = 16, unique = true)
+    @Column(name = "nickname", nullable = false, length = 16)
     private String nickname;
 
     @Column(name = "enabled", nullable = false)
