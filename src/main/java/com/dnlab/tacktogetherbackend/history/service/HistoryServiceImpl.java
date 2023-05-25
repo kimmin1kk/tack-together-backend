@@ -1,6 +1,5 @@
 package com.dnlab.tacktogetherbackend.history.service;
 
-import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
 import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
 import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
 import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryListDTO;
@@ -34,7 +33,7 @@ public class HistoryServiceImpl implements HistoryService {
     @Override //요약된 이용기록 리스트 반환
     @Transactional(readOnly = true)
     public HistorySummaryListDTO getHistorySummaryListByUsername(String username) {
-        List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByMemberUsername(username);
+        List<MatchInfo> matchInfos = matchInfoRepository.findCompletedMatchInfosByMemberUsername(username);
 
         return new HistorySummaryListDTO(matchInfos.stream()
                 .map(matchInfo -> convertMatchInfoToHistorySummaryDTO(matchInfo, username))

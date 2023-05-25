@@ -16,6 +16,6 @@ public interface MatchInfoRepository extends JpaRepository<MatchInfo, Long> {
             "FROM MatchInfoMember mim " +
             "WHERE mim.member.username = :username AND mim.matchInfo.status IS COMPLETE) " +
             "ORDER BY mi.createTime DESC")
-    List<MatchInfo> findMatchInfosByMemberUsername(@Param("username") String username);
+    List<MatchInfo> findCompletedMatchInfosByMemberUsername(@Param("username") String username);
 
 }
