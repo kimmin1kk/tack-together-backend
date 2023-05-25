@@ -42,6 +42,7 @@ public class HistoryServiceImpl implements HistoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public HistoryDetailDTO getHistoryDetailByHistoryIdAndUsername(Long id, String username) {
         return convertMatchInfoToHistoryDetailDTO(matchInfoRepository.findById(id).orElseThrow(), username);
     }
@@ -56,7 +57,6 @@ public class HistoryServiceImpl implements HistoryService {
                 .paymentAmount(matchInfoMember.getPaymentAmount())
                 .build();
     }
-
 
     private HistoryDetailDTO convertMatchInfoToHistoryDetailDTO(MatchInfo matchInfo, String username) {
         MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
