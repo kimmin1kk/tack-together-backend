@@ -17,4 +17,12 @@ public class DropOffNotificationDTO {
         this.sessionId = sessionId;
         this.dropOffLocation = dropOffLocation;
     }
+
+    public static DropOffNotificationDTO of(DropOffRequestDTO dropOffRequestDTO, String username) {
+        return DropOffNotificationDTO.builder()
+                .dropOffLocation(dropOffRequestDTO.getEndLocation())
+                .sessionId(dropOffRequestDTO.getSessionId())
+                .username(username)
+                .build();
+    }
 }

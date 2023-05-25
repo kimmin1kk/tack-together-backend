@@ -1,57 +1,77 @@
 package com.dnlab.tacktogetherbackend.history.service;
-import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
 
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
+import com.dnlab.tacktogetherbackend.history.dto.HistoryDetailDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryDTO;
+import com.dnlab.tacktogetherbackend.history.dto.HistorySummaryListDTO;
 import com.dnlab.tacktogetherbackend.match.domain.MatchInfo;
+import com.dnlab.tacktogetherbackend.match.domain.MatchInfoMember;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoMemberRepository;
 import com.dnlab.tacktogetherbackend.match.repository.MatchInfoRepository;
-import com.dnlab.tacktogetherbackend.match.repository.TemporaryMatchSessionInfoRepository;
 
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * MatchInfo
+ * date, origin destination,waypoints, createTime, dropOffTime
+ * MatchInfoMember
+ * paymentAmount,distance
+ */
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class HistoryServiceImpl implements HistoryService {
-    private final MemberRepository memberRepository;
     private final MatchInfoMemberRepository matchInfoMemberRepository;
     private final MatchInfoRepository matchInfoRepository;
-    private final TemporaryMatchSessionInfoRepository temporaryMatchSessionInfoRepository;
 
-    // 히스토리 서비스에서는 get만 할 예정이므로 별 다른 서비스 로직이 필요하진 않을 것 같음
-    @Override //History 간단하게
+    @Override //요약된 이용기록 리스트 반환
     @Transactional(readOnly = true)
-    public List<MatchInfo> getHistorySummaryByUsername(String username) {
-        log.info("MatchInfos : " + matchInfoRepository.findMatchInfosByMemberUsername(username));
-        return null;
-//                HistorySummaryDTO().builder()
-//                .date()
-//                .origin()
-//                .destination()
-//                .paymentAmount()
-//                .build();
+    public HistorySummaryListDTO getHistorySummaryListByUsername(String username) {
+        List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByMemberUsername(username);
+
+        return new HistorySummaryListDTO(matchInfos.stream()
+                .map(matchInfo -> convertMatchInfoToHistorySummaryDTO(matchInfo, username))
+                .collect(Collectors.toList()));
     }
 
-//    @Override //History 자세하게
-//    @Builder
-//    public HistoryDetailDTO getHistoryDetailByUsername(String username) {
-//        return null;
-////                new HistoryDetailDTO().builder()
-////                .date()
-////                .origin()
-////                .waypoints()
-////                .destination()
-////                .startTime()
-////                .rideDuration()
-////                .endTime()
-////                .opponentMember()
-////                .savedCost()
-////                .build();
-//    }
+    @Override
+    public HistoryDetailDTO getHistoryDetailByHistoryIdAndUsername(Long id, String username) {
+        return convertMatchInfoToHistoryDetailDTO(matchInfoRepository.findById(id).orElseThrow(), username);
+    }
+
+    private HistorySummaryDTO convertMatchInfoToHistorySummaryDTO(MatchInfo matchInfo, String username) {
+        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
+        return HistorySummaryDTO.builder()
+                .id(matchInfo.getId())
+                .date(matchInfo.getCreateTime().getTime())
+                .origin(matchInfo.getOrigin())
+                .destination(matchInfo.getDestination())
+                .paymentAmount(matchInfoMember.getPaymentAmount())
+                .build();
+    }
+
+
+    private HistoryDetailDTO convertMatchInfoToHistoryDetailDTO(MatchInfo matchInfo, String username) {
+        MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
+        return HistoryDetailDTO.builder()
+                .id(matchInfo.getId())
+                .date(matchInfo.getCreateTime().getTime())
+                .origin(matchInfo.getOrigin())
+                .waypoints(matchInfo.getWaypoints())
+                .destination(matchInfo.getDestination())
+                .createTime(matchInfo.getCreateTime().getTime())
+                .distance(matchInfo.getTotalDistance())
+                .dropOffTime(matchInfoMember.getDropOffTime().getTime())
+                .opponentMember(matchInfo.getMatchInfoMembers().toString())
+                .paymentAmount(matchInfoMember.getPaymentAmount())
+                .build();
+    }
+
 }
