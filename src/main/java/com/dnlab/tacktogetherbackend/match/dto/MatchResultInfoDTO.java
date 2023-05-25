@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class MatchResultInfoDTO {
     private String username;
-    private String opponentUsername;
+    private String opponentNickname;
     private List<RouteDTO> routes;
     private int estimatedTotalTaxiFare;
     private int estimatedTaxiFare;
@@ -21,9 +21,9 @@ public class MatchResultInfoDTO {
     private double opponentPaymentRate;
 
     @Builder
-    public MatchResultInfoDTO(String username, String opponentUsername, List<RouteDTO> routes, int estimatedTotalTaxiFare, int estimatedTaxiFare, double paymentRate, double opponentPaymentRate) {
+    public MatchResultInfoDTO(String username, String opponentNickname, List<RouteDTO> routes, int estimatedTotalTaxiFare, int estimatedTaxiFare, double paymentRate, double opponentPaymentRate) {
         this.username = username;
-        this.opponentUsername = opponentUsername;
+        this.opponentNickname = opponentNickname;
         this.routes = routes;
         this.estimatedTotalTaxiFare = estimatedTotalTaxiFare;
         this.estimatedTaxiFare = estimatedTaxiFare;
@@ -38,14 +38,22 @@ public class MatchResultInfoDTO {
         double paymentRate = (destination) ? taxiFares.getDestinationRate() : taxiFares.getWaypointRate();
         double opponentPaymentRate = (!destination) ? taxiFares.getDestinationRate() : taxiFares.getWaypointRate();
 
-        return MatchResultInfoDTO.builder()
-                .username(postMatchTemporaryInfo.getNearerRequest().getUsername())
-                .opponentUsername(postMatchTemporaryInfo.getFartherRequest().getUsername())
+        MatchResultInfoDTO.MatchResultInfoDTOBuilder builder = MatchResultInfoDTO.builder()
                 .routes(postMatchTemporaryInfo.getFixedDirections().getRoutes())
                 .estimatedTotalTaxiFare(taxiFares.getTotalFare())
                 .estimatedTaxiFare(taxiFare)
                 .paymentRate(paymentRate)
-                .opponentPaymentRate(opponentPaymentRate)
-                .build();
+                .opponentPaymentRate(opponentPaymentRate);
+        if (destination) {
+            return builder
+                    .username(postMatchTemporaryInfo.getFartherRequest().getUsername())
+                    .opponentNickname(postMatchTemporaryInfo.getNearerRequest().getNickname())
+                    .build();
+        } else {
+            return builder
+                    .username(postMatchTemporaryInfo.getNearerRequest().getUsername())
+                    .opponentNickname(postMatchTemporaryInfo.getFartherRequest().getNickname())
+                    .build();
+        }
     }
 }
