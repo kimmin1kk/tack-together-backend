@@ -112,6 +112,6 @@ public class AuthServiceImpl implements AuthService {
         if (username.length() < 5 || username.length() > 20) {
             return new CheckUsernameRequestDTO(false);
         }
-        return new CheckUsernameRequestDTO(memberRepository.existsByUsername(username));
+        return new CheckUsernameRequestDTO(!memberRepository.existsByUsername(username));
     }
 }
