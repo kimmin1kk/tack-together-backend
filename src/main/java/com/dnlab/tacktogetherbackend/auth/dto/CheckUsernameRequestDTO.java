@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CheckUsernameRequestDTO {
-    private boolean duplicated;
+    private boolean available;
 }
