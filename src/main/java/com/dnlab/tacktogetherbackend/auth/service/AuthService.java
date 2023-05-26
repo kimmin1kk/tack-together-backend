@@ -8,7 +8,7 @@ public interface AuthService {
     LoginResponseDTO signIn(LoginRequestDTO loginRequestDTO);
     RegistrationResponseDTO signUp(RegistrationRequestDTO registrationRequestDTO);
     LoginResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshTokenRequestDTO);
-    CheckUsernameRequestDTO checkDuplicatedUsername(String username);
+    CheckUsernameRequestDTO checkAvailableUsername(String username);
     boolean validAuthentication(HttpServletRequest request);
 
     MemberInfoResponseDTO getMemberInfoByUsername(String username);
