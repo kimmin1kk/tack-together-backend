@@ -108,7 +108,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public CheckUsernameRequestDTO checkDuplicatedUsername(String username) {
-        return new CheckUsernameRequestDTO(memberRepository.existsByUsername(username));
+    public CheckUsernameRequestDTO checkAvailableUsername(String username) {
+        if (username.length() < 5 || username.length() > 20) {
+            return new CheckUsernameRequestDTO(false);
+        }
+        return new CheckUsernameRequestDTO(!memberRepository.existsByUsername(username));
     }
 }

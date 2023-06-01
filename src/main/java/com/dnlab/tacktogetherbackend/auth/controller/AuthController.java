@@ -60,8 +60,8 @@ public class AuthController {
     }
 
     @GetMapping("/check-username")
-    public ResponseEntity<CheckUsernameRequestDTO> checkDuplicatedUsername(@RequestParam String username) {
-        return ResponseEntity.ok(authService.checkDuplicatedUsername(username));
+    public ResponseEntity<CheckUsernameRequestDTO> checkAvailableUsername(@RequestParam String username) {
+        return ResponseEntity.ok(authService.checkAvailableUsername(username));
     }
 
     // 인증 테스트 url
