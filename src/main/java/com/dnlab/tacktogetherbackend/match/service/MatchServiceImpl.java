@@ -146,7 +146,7 @@ public class MatchServiceImpl implements MatchService {
             return handleAcceptedMatchedRequests(opponentMatchRequest.getTempSessionId());
         }
 
-        return new MatchResponseDTO(MatchDecisionStatus.WAITING, matchRequest.getTempSessionId());
+        return new MatchResponseDTO(MatchDecisionStatus.WAITING, "");
     }
 
     @Override
