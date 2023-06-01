@@ -158,7 +158,8 @@ public class MatchServiceImpl implements MatchService {
         matchRequest.resetStatus();
         opponentMatchedRequest.resetStatus();
 
-        temporaryMatchSessionInfoRepository.deleteBySessionId(matchRequest.getTempSessionId());
+        TemporaryMatchSessionInfo temporaryMatchSessionInfo = temporaryMatchSessionInfoRepository.findById(matchRequest.getTempSessionId()).orElseThrow();
+        temporaryMatchSessionInfoRepository.delete(temporaryMatchSessionInfo);
     }
 
     @Override
