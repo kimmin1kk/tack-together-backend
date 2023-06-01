@@ -81,7 +81,7 @@ public class MatchServiceImpl implements MatchService {
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
                 .filter(key -> !key.equals(matchRequestId))
                 .map(activeMatchRequests::get)
-                .filter(req -> (!req.isMatched() && isSuitableRequests(matchRequest, req)))
+                .filter(req -> (!req.isMatched() && !req.getUsername().equals(matchRequest.getUsername()) && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
 
         MatchRequest opponentMatchRequest = suitableRequests.stream()
