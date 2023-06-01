@@ -15,7 +15,4 @@ import java.io.Serializable;
 public class MatchResponseDTO implements Serializable {
     private MatchDecisionStatus matchDecisionStatus;
     private String matchSessionId;
-
-    public MatchResponseDTO(MatchDecisionStatus matchDecisionStatus) {
-    }
 }

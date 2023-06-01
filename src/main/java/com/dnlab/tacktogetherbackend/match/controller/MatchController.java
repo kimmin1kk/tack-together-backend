@@ -101,7 +101,7 @@ public class MatchController {
         MatchRequest opponentMatchRequest = matchService.getMatchRequestById(matchRequest.getOpponentMatchRequestId()).orElseThrow();
         matchService.rejectMatch(matchRequestId);
 
-        MatchResponseDTO payload = new MatchResponseDTO(MatchDecisionStatus.REJECTED);
+        MatchResponseDTO payload = new MatchResponseDTO(MatchDecisionStatus.REJECTED, matchRequest.getTempSessionId());
         Map<String, Object> headers = Collections.singletonMap(headerEventType, "reject");
         messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
         messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(payload, headers));
