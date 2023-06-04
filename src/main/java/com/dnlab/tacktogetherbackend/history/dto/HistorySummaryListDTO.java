@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class HistorySummaryListDTO implements Serializable {
-    private List<HistorySummaryDTO> historySummaryDTOS;
+    private List<HistorySummaryDTO> historySummaries;
 
 }
