@@ -90,7 +90,7 @@ public class MatchController {
             messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
         } else {
             messagingTemplate.convertAndSendToUser(matchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(matchResponseDTO, headers));
-            messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new MatchResponseDTO(MatchDecisionStatus.ACCEPTED, ""), headers));
+            messagingTemplate.convertAndSendToUser(opponentMatchRequest.getUsername(), DESTINATION_URL, new GenericMessage<>(new MatchResponseDTO(MatchDecisionStatus.ACCEPTED, matchResponseDTO.getMatchSessionId()), headers));
         }
     }
 
