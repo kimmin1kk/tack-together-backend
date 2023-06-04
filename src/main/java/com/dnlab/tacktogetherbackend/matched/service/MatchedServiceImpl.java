@@ -130,7 +130,7 @@ public class MatchedServiceImpl implements MatchedService {
 
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
-        MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
+        MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().max(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
 
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(settlementRequestDTO.getTotalFare(),
                 waypointMatchInfoMember.getDistance(),
