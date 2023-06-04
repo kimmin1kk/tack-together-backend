@@ -8,4 +8,5 @@ public interface MatchedService {
     String getOpponentUsernameBySessionId(String sessionId, String username);
     DropOffNotificationDTO processDropOffRequest(DropOffRequestDTO dropOffRequestDTO, String username);
     SettlementReceivedRequestDTO processSettlementRequest(SettlementRequestDTO settlementRequestDTO, String username);
+    SettlementInfoDTO getSettlementInfo(String username);
 }
