@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 
@@ -106,6 +107,7 @@ public class MatchedServiceImpl implements MatchedService {
                     .build());
             matchInfo.setDestination(dropOffRequestDTO.getEndLocation());
             matchInfo.setTotalDistance(distance);
+            matchInfo.setStatus(RidingStatus.DROP_OFFED);
             destinationMember.setDestination(dropOffRequestDTO.getEndLocation());
             destinationMember.setDistance(distance);
         }
@@ -127,10 +129,11 @@ public class MatchedServiceImpl implements MatchedService {
         MatchSessionInfo matchSessionInfo = matchSessionInfoRepository.findById(settlementRequestDTO.getSessionId()).orElseThrow();
         MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
         matchInfo.setTotalFare(settlementRequestDTO.getTotalFare());
+        matchInfo.setStatus(RidingStatus.COMPLETE);
 
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
-        MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
+        MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().max(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
 
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(settlementRequestDTO.getTotalFare(),
                 waypointMatchInfoMember.getDistance(),
@@ -152,6 +155,33 @@ public class MatchedServiceImpl implements MatchedService {
                         .getUsername())
                 .destinationRate(taxiFares.getDestinationRate())
                 .waypointRate(taxiFares.getWaypointRate())
+                .build();
+    }
+
+    @Override
+    public SettlementInfoDTO getSettlementInfo(String username) {
+        List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByUsernameAndStatus(username, RidingStatus.DROP_OFFED);
+        MatchInfo matchInfo = matchInfos.stream().findFirst().orElseThrow();
+        Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
+
+        MatchInfoMember waypointMember = matchInfoMembers.stream()
+                .min(Comparator.comparing(MatchInfoMember::getDistance))
+                .orElseThrow();
+        MatchInfoMember destinationMember = matchInfoMembers.stream()
+                .max(Comparator.comparing(MatchInfoMember::getDestination))
+                .orElseThrow();
+
+        TaxiFares taxiFares = taxiFareCalculator.calculateFare(10000,
+                waypointMember.getDistance(),
+                destinationMember.getDistance());
+
+        return SettlementInfoDTO.builder()
+                .origin(matchInfo.getOrigin())
+                .totalDistance(destinationMember.getDistance())
+                .waypoint(waypointMember.getDestination())
+                .destination(matchInfo.getDestination())
+                .paymentRate(taxiFares.getDestinationFare())
+                .opponentPaymentRate(taxiFares.getWaypointRate())
                 .build();
     }
 }
