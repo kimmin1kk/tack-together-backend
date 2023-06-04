@@ -150,6 +150,8 @@ public class MatchedServiceImpl implements MatchedService {
                         .filter(sessionMemberInfo -> !sessionMemberInfo.getUsername().equals(username))
                         .findAny().orElseThrow()
                         .getUsername())
+                .destinationRate(taxiFares.getDestinationRate())
+                .waypointRate(taxiFares.getWaypointRate())
                 .build();
     }
 }
