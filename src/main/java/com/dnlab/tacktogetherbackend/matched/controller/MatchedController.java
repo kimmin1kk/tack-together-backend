@@ -35,7 +35,6 @@ public class MatchedController {
         String opponentUsername = matchedService.getOpponentUsernameBySessionId(locationUpdateRequestDTO.getSessionId(), principal.getName());
         LocationInfoResponseDTO locationInfoResponseDTO = matchedService.handleLocationUpdate(locationUpdateRequestDTO, principal.getName());
 
-
         Map<String, Object> headers = Collections.singletonMap(headerEventType, "shareLocation");
         messagingTemplate.convertAndSendToUser(opponentUsername, DESTINATION_URL, new GenericMessage<>(locationInfoResponseDTO, headers));
 
@@ -44,6 +43,8 @@ public class MatchedController {
             matchedService.handleStartRiding(locationInfoResponseDTO.getSessionId(), locationInfoResponseDTO.getLocation());
             messagingTemplate.convertAndSendToUser(principal.getName(), DESTINATION_URL, new GenericMessage<>(LocationInfoResponseDTO.builder()
                     .sessionId(locationUpdateRequestDTO.getSessionId())
+                    .location(locationUpdateRequestDTO.getLocation())
+                    .departureAgreed(true)
                     .ridingStarted(true)
                     .build(), headers));
         }
