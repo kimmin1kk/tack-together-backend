@@ -61,8 +61,8 @@ public class TemporaryMatchSessionInfo implements Serializable {
                 .waypoints(postMatchTemporaryInfo.getNearerRequest().getDestination())
                 .destinationDistance(postMatchTemporaryInfo.getDestinationDistance())
                 .waypointDistance(postMatchTemporaryInfo.getWaypointDistance())
-                .destinationMatchRequestId(postMatchTemporaryInfo.getFartherRequest().getOpponentMatchRequestId())
-                .waypointMatchRequestId(postMatchTemporaryInfo.getNearerRequest().getOpponentMatchRequestId())
+                .destinationMatchRequestId(postMatchTemporaryInfo.getFartherRequest().getId())
+                .waypointMatchRequestId(postMatchTemporaryInfo.getNearerRequest().getId())
                 .expiredTime(expiredTime)
                 .build();
     }
