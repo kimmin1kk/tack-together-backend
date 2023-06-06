@@ -181,7 +181,7 @@ public class MatchedServiceImpl implements MatchedService {
                 .totalDistance(destinationMember.getDistance())
                 .waypoint(waypointMember.getDestination())
                 .destination(matchInfo.getDestination())
-                .paymentRate(taxiFares.getDestinationFare())
+                .paymentRate(taxiFares.getDestinationRate())
                 .opponentPaymentRate(taxiFares.getWaypointRate())
                 .build();
     }
