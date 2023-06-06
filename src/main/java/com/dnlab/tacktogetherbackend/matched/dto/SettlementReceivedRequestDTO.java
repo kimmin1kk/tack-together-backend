@@ -14,9 +14,10 @@ public class SettlementReceivedRequestDTO {
     private String accountInfo;
     private double waypointRate;
     private double destinationRate;
+    private RouteInfoDTO routeInfo;
 
     @Builder
-    public SettlementReceivedRequestDTO(String sessionId, String username, int requestedFare, int totalFare, String accountInfo, double waypointRate, double destinationRate) {
+    public SettlementReceivedRequestDTO(String sessionId, String username, int requestedFare, int totalFare, String accountInfo, double waypointRate, double destinationRate, RouteInfoDTO routeInfo) {
         this.sessionId = sessionId;
         this.username = username;
         this.requestedFare = requestedFare;
@@ -24,5 +25,6 @@ public class SettlementReceivedRequestDTO {
         this.accountInfo = accountInfo;
         this.waypointRate = waypointRate;
         this.destinationRate = destinationRate;
+        this.routeInfo = routeInfo;
     }
 }

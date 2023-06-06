@@ -143,6 +143,12 @@ public class MatchedServiceImpl implements MatchedService {
         destinationMatchInfoMember.setPaymentAmount(taxiFares.getDestinationFare());
         matchSessionInfoRepository.delete(matchSessionInfo);
 
+        RouteInfoDTO routeInfoDTO = RouteInfoDTO.builder()
+                .origin(matchInfo.getOrigin())
+                .waypoint(waypointMatchInfoMember.getDestination())
+                .destination(destinationMatchInfoMember.getDestination())
+                .build();
+
         return SettlementReceivedRequestDTO.builder()
                 .sessionId(settlementRequestDTO.getSessionId())
                 .requestedFare(waypointMatchInfoMember.getPaymentAmount())
@@ -155,6 +161,7 @@ public class MatchedServiceImpl implements MatchedService {
                         .getUsername())
                 .destinationRate(taxiFares.getDestinationRate())
                 .waypointRate(taxiFares.getWaypointRate())
+                .routeInfo(routeInfoDTO)
                 .build();
     }
 
