@@ -159,6 +159,7 @@ public class MatchedServiceImpl implements MatchedService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SettlementInfoDTO getSettlementInfo(String username) {
         List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByUsernameAndStatus(username, RidingStatus.DROP_OFFED);
         MatchInfo matchInfo = matchInfos.stream().findFirst().orElseThrow();
@@ -180,7 +181,7 @@ public class MatchedServiceImpl implements MatchedService {
                 .totalDistance(destinationMember.getDistance())
                 .waypoint(waypointMember.getDestination())
                 .destination(matchInfo.getDestination())
-                .paymentRate(taxiFares.getDestinationFare())
+                .paymentRate(taxiFares.getDestinationRate())
                 .opponentPaymentRate(taxiFares.getWaypointRate())
                 .build();
     }
