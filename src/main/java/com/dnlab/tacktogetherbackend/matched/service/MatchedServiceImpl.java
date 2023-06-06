@@ -176,7 +176,7 @@ public class MatchedServiceImpl implements MatchedService {
                 .min(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
         MatchInfoMember destinationMember = matchInfoMembers.stream()
-                .max(Comparator.comparing(MatchInfoMember::getDestination))
+                .max(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
 
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(10000,
