@@ -7,11 +7,11 @@ import com.dnlab.tacktogetherbackend.match.common.MatchRequest;
 public interface KakaoMapService {
     ResponseDirections getRoute(RequestDirections requestDirections);
 
-    default ResponseDirections getRoute(MatchRequest matchRequest1, MatchRequest matchRequest2) {
+    default ResponseDirections getRoute(MatchRequest destinationRequest, MatchRequest waypointRequest) {
         return getRoute(RequestDirections.builder()
-                .origin(matchRequest1.getOrigin())
-                .destination(matchRequest1.getDestination())
-                .waypoints(matchRequest2.getDestination())
+                .origin(destinationRequest.getOrigin())
+                .destination(destinationRequest.getDestination())
+                .waypoints(waypointRequest.getDestination())
                 .build());
     }
 

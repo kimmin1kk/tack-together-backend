@@ -39,27 +39,29 @@ public class PostMatchTemporaryInfo {
         int distance1 = kakaoMapService.getDistance(directionCase1);
         int distance2 = kakaoMapService.getDistance(directionCase2);
 
-        MatchRequest fartherRequest;
-        MatchRequest nearerRequest;
+        MatchRequest destinationRequest;
+        MatchRequest waypointRequest;
         ResponseDirections fixedDirections;
 
         // 서로를 경유지로 설정했을 경우 어느 경로가 더 짧은가 비교
-        if (distance1 > distance2) {
-            fartherRequest = matchRequest2;
-            nearerRequest = matchRequest1;
-            fixedDirections = directionCase2;
-        } else {
-            fartherRequest = matchRequest1;
-            nearerRequest = matchRequest2;
+        int destinationDistance;
+        if (distance1 <= distance2) {
+            destinationDistance = distance1;
+            destinationRequest = matchRequest1;
+            waypointRequest = matchRequest2;
             fixedDirections = directionCase1;
+        } else {
+            destinationDistance = distance2;
+            destinationRequest = matchRequest2;
+            waypointRequest = matchRequest1;
+            fixedDirections = directionCase2;
         }
 
-        int destinationDistance = Math.min(distance1, distance2);
-        int waypointDistance = kakaoMapService.getDistance(nearerRequest);
+        int waypointDistance = kakaoMapService.getDistance(waypointRequest);
 
         return new PostMatchTemporaryInfo(
-                fartherRequest,
-                nearerRequest,
+                destinationRequest,
+                waypointRequest,
                 fixedDirections,
                 waypointDistance,
                 destinationDistance);
