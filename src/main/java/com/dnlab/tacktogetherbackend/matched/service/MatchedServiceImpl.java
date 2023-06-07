@@ -88,7 +88,7 @@ public class MatchedServiceImpl implements MatchedService {
                 .min(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
         MatchInfoMember destinationMember = matchInfoMembers.stream()
-                .max(Comparator.comparing(MatchInfoMember::getDestination))
+                .max(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
 
         if (waypointMember.getMember().getUsername().equals(username)) {
@@ -143,6 +143,12 @@ public class MatchedServiceImpl implements MatchedService {
         destinationMatchInfoMember.setPaymentAmount(taxiFares.getDestinationFare());
         matchSessionInfoRepository.delete(matchSessionInfo);
 
+        RouteInfoDTO routeInfoDTO = RouteInfoDTO.builder()
+                .origin(matchInfo.getOrigin())
+                .waypoint(waypointMatchInfoMember.getDestination())
+                .destination(destinationMatchInfoMember.getDestination())
+                .build();
+
         return SettlementReceivedRequestDTO.builder()
                 .sessionId(settlementRequestDTO.getSessionId())
                 .requestedFare(waypointMatchInfoMember.getPaymentAmount())
@@ -155,6 +161,7 @@ public class MatchedServiceImpl implements MatchedService {
                         .getUsername())
                 .destinationRate(taxiFares.getDestinationRate())
                 .waypointRate(taxiFares.getWaypointRate())
+                .routeInfo(routeInfoDTO)
                 .build();
     }
 
@@ -169,7 +176,7 @@ public class MatchedServiceImpl implements MatchedService {
                 .min(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
         MatchInfoMember destinationMember = matchInfoMembers.stream()
-                .max(Comparator.comparing(MatchInfoMember::getDestination))
+                .max(Comparator.comparing(MatchInfoMember::getDistance))
                 .orElseThrow();
 
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(10000,
