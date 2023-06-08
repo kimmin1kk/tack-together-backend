@@ -9,9 +9,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 public class MatchRequestDTO {
-    private String username;
-    private String nickname;
-
     @NotNull
     private String origin;
 
@@ -25,9 +22,7 @@ public class MatchRequestDTO {
     private short destinationRange;
 
     @Builder
-    public MatchRequestDTO(String username, String nickname, String origin, String destination, short originRange, short destinationRange) {
-        this.username = username;
-        this.nickname = nickname;
+    public MatchRequestDTO(String origin, String destination, short originRange, short destinationRange) {
         this.origin = origin;
         this.destination = destination;
         this.originRange = originRange;

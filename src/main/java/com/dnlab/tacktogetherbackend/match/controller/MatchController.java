@@ -47,8 +47,7 @@ public class MatchController {
                                    Principal principal) {
         log.debug("매칭 요청 수신");
         // DTO 로부터 MatchRequest 객체를 생성하고 맵에 추가
-        matchRequestDTO.setUsername(principal.getName());
-        String matchRequestId = matchService.addMatchRequest(matchRequestDTO);
+        String matchRequestId = matchService.addMatchRequest(matchRequestDTO, principal.getName());
         Objects.requireNonNull(headerAccessor.getSessionAttributes()).put(MATCH_REQUEST_ID, matchRequestId);
 
         // 매칭 조건에 맞는 매칭 요청 찾기

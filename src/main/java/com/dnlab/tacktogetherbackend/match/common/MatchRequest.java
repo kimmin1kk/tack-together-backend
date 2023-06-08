@@ -46,10 +46,10 @@ public class MatchRequest implements Serializable {
     // 매칭 정보들 아이디
     private String tempSessionId;
 
-    public MatchRequest(MatchRequestDTO dto) {
-        this.id = generateRequestId(dto.getUsername());
-        this.username = dto.getUsername();
-        this.nickname = dto.getNickname();
+    public MatchRequest(MatchRequestDTO dto, String username, String nickname) {
+        this.id = generateRequestId(username);
+        this.username = username;
+        this.nickname = nickname;
         this.origin = dto.getOrigin();
         this.destination = dto.getDestination();
         this.originRange = dto.getOriginRange();

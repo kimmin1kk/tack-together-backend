@@ -50,14 +50,13 @@ public class MatchServiceImpl implements MatchService {
     private final TaxiFareCalculator taxiFareCalculator;
 
     @Override
-    public String addMatchRequest(MatchRequestDTO matchRequestDTO) {
-        if (isMatchRequestExistInActiveMatchRequests(matchRequestDTO.getUsername())) {
-            cancelSearchingByUsername(matchRequestDTO.getUsername());
+    public String addMatchRequest(MatchRequestDTO matchRequestDTO, String username) {
+        if (isMatchRequestExistInActiveMatchRequests(username)) {
+            cancelSearchingByUsername(username);
         }
 
-        Member member = memberRepository.findMemberByUsername(matchRequestDTO.getUsername()).orElseThrow();
-        matchRequestDTO.setNickname(member.getNickname());
-        MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
+        Member member = memberRepository.findMemberByUsername(username).orElseThrow();
+        MatchRequest matchRequest = new MatchRequest(matchRequestDTO, username, member.getNickname());
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
         log.info("매칭 대기열이 추가됨 : {" + matchRequest + "}");
@@ -160,11 +159,6 @@ public class MatchServiceImpl implements MatchService {
 
         TemporaryMatchSessionInfo temporaryMatchSessionInfo = temporaryMatchSessionInfoRepository.findById(matchRequest.getTempSessionId()).orElseThrow();
         temporaryMatchSessionInfoRepository.delete(temporaryMatchSessionInfo);
-    }
-
-    @Override
-    public void resetMatchRequests() {
-        activeMatchRequests.clear();
     }
 
     private boolean isSuitableRequests(MatchRequest originReq, MatchRequest targetReq) {
