@@ -23,6 +23,7 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -69,7 +70,13 @@ public class MatchController {
     }
 
     @MessageMapping("/match/cancel-search")
-    public void handleCancelingSearch(Principal principal) {
+    public void handleCancelingSearch(Principal principal, SimpMessageHeaderAccessor headerAccessor) {
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        if (sessionAttributes != null) {
+            sessionAttributes.remove(MATCH_REQUEST_ID);
+            headerAccessor.setSessionAttributes(sessionAttributes);
+        }
+
         matchService.cancelSearchingByUsername(principal.getName());
     }
 
@@ -111,12 +118,8 @@ public class MatchController {
     // WebSocket 연결 해제 처리
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
-        String matchRequestId = (String) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get(MATCH_REQUEST_ID);
-
-        if (matchRequestId != null) {
-            matchService.removeRideRequest(matchRequestId);
-        }
+        Optional.ofNullable(SimpMessageHeaderAccessor.wrap(event.getMessage()).getSessionAttributes())
+                .map(headers -> (String) headers.get(MATCH_REQUEST_ID))
+                .ifPresent(matchService::removeRideRequest);
     }
-
 }
