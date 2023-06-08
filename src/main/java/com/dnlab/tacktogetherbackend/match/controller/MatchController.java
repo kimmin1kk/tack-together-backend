@@ -117,6 +117,9 @@ public class MatchController {
     // WebSocket 연결 해제 처리
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+        Optional.ofNullable(event.getUser())
+                        .ifPresent(principal -> matchService.cancelSearchingByUsername(principal.getName()));
+
         Optional.ofNullable(SimpMessageHeaderAccessor.wrap(event.getMessage()).getSessionAttributes())
                 .map(headers -> (String) headers.get(MATCH_REQUEST_ID))
                 .ifPresent(matchService::removeRideRequest);

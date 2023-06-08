@@ -170,12 +170,12 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void cancelSearchingByUsername(String username) {
-        log.debug("removeMatchRequestsByUsername 이 username{" + username + "} 에 의해 호출됨");
         activeMatchRequests.keySet()
                 .stream()
-                .map(activeMatchRequests::get)
-                .filter(matchRequest -> matchRequest.getUsername().equals(username))
-                .forEach(matchRequest -> activeMatchRequests.remove(matchRequest.getId()));
+                .filter(key -> key.startsWith(username))
+                .forEach(activeMatchRequests::remove);
+
+        log.info("삭제 후 매칭 대기열 : " + activeMatchRequests);
     }
 
     private boolean isSuitableOriginRanges(MatchRequest req1, MatchRequest req2) {
