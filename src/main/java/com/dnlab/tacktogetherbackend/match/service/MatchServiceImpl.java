@@ -60,6 +60,7 @@ public class MatchServiceImpl implements MatchService {
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
         log.info("매칭 대기열이 추가됨 : {" + matchRequest + "}");
+        log.info("매칭 대기열 : {" + activeMatchRequests + "}");
         return matchRequest.getId();
     }
 
