@@ -51,7 +51,7 @@ public class MatchController {
         Objects.requireNonNull(headerAccessor.getSessionAttributes()).put(MATCH_REQUEST_ID, matchRequestId);
 
         // 매칭 조건에 맞는 매칭 요청 찾기
-        String opponentMatchRequestId = matchService.findMatchingMatchRequests(matchRequestId);
+        String opponentMatchRequestId = matchService.findMatchingMatchRequests(matchRequestId, principal.getName());
 
         // 매칭 조건이 맞으면 각 사용자들에게 매칭 정보 전송
         if (opponentMatchRequestId != null && !opponentMatchRequestId.isBlank()) {

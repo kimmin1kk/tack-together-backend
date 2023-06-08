@@ -66,7 +66,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public Optional<MatchRequest> getMatchRequestById(String matchRequestId) {
-        return Optional.of(activeMatchRequests.get(matchRequestId));
+        return Optional.ofNullable(activeMatchRequests.get(matchRequestId));
     }
 
     @Override
@@ -75,11 +75,11 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public String findMatchingMatchRequests(String matchRequestId) {
+    public String findMatchingMatchRequests(String matchRequestId, String username) {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         log.info("적합한 요청 찾는 중 ...");
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
-                .filter(key -> !key.equals(matchRequestId))
+                .filter(key -> !key.startsWith(username) && !key.equals(matchRequestId))
                 .map(activeMatchRequests::get)
                 .filter(req -> (!req.isMatched() && !req.getUsername().equals(matchRequest.getUsername()) && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
