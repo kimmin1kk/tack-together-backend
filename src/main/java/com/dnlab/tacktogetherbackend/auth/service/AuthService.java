@@ -13,4 +13,5 @@ public interface AuthService {
 
     MemberInfoResponseDTO getMemberInfoByUsername(String username);
     MemberUpdateDTO updateMemberInfo(MemberUpdateDTO memberUpdateDTO, String username);
+    void logout(String username);
 }

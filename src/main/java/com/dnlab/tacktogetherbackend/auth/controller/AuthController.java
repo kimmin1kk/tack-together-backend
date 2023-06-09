@@ -2,6 +2,7 @@ package com.dnlab.tacktogetherbackend.auth.controller;
 
 import com.dnlab.tacktogetherbackend.auth.dto.*;
 import com.dnlab.tacktogetherbackend.auth.exception.DuplicateUsernameException;
+import com.dnlab.tacktogetherbackend.auth.exception.TokenNotFoundException;
 import com.dnlab.tacktogetherbackend.auth.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,9 +55,20 @@ public class AuthController {
         }
     }
 
+    @DeleteMapping("/logout")
+    public ResponseEntity<LogoutResponseDTO> logout(Principal principal) {
+        authService.logout(principal.getName());
+
+        return ResponseEntity.ok(new LogoutResponseDTO("OK"));
+    }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<LoginResponseDTO> refreshAccessToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
-        return ResponseEntity.ok(authService.refreshAccessToken(refreshTokenRequestDTO));
+        try {
+            return ResponseEntity.ok(authService.refreshAccessToken(refreshTokenRequestDTO));
+        } catch (TokenNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @GetMapping("/check-username")
@@ -77,7 +89,7 @@ public class AuthController {
 
     @PutMapping("/update-info")
     public ResponseEntity<MemberUpdateDTO> updateMemberInfo(Principal principal,
-                                 @RequestBody MemberUpdateDTO memberUpdateDTO) {
+                                                            @RequestBody MemberUpdateDTO memberUpdateDTO) {
         return ResponseEntity.ok(authService.updateMemberInfo(memberUpdateDTO, principal.getName()));
     }
 }
