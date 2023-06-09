@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RedisHash(value = "temporaryMatchSessionInfo")
 public class TemporaryMatchSessionInfo implements Serializable {
     @Id
+    @Indexed
     private String sessionId;
 
     // 경로 검색 조건
