@@ -12,4 +12,5 @@ public interface AuthService {
     boolean validAuthentication(HttpServletRequest request);
 
     MemberInfoResponseDTO getMemberInfoByUsername(String username);
+    MemberUpdateDTO updateMemberInfo(MemberUpdateDTO memberUpdateDTO, String username);
 }

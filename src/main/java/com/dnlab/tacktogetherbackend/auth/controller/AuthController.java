@@ -74,4 +74,10 @@ public class AuthController {
     public ResponseEntity<MemberInfoResponseDTO> getMemberInfo(Principal principal) {
         return ResponseEntity.ok(authService.getMemberInfoByUsername(principal.getName()));
     }
+
+    @PutMapping("/update-info")
+    public ResponseEntity<MemberUpdateDTO> updateMemberInfo(Principal principal,
+                                 @RequestBody MemberUpdateDTO memberUpdateDTO) {
+        return ResponseEntity.ok(authService.updateMemberInfo(memberUpdateDTO, principal.getName()));
+    }
 }
