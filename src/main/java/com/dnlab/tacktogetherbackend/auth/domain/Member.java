@@ -2,18 +2,22 @@ package com.dnlab.tacktogetherbackend.auth.domain;
 
 
 import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
-@Table(name = "member")
-@Data
+@Table(name = "member",
+        indexes = {@Index(name = "index_username", columnList = "username", unique = true)})
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @NoArgsConstructor
 public class Member {
     @Id
@@ -72,5 +76,18 @@ public class Member {
     @PreUpdate
     public void preUpdate() {
         this.updateTime = TimestampUtil.getCurrentTime();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Member member = (Member) o;
+        return getId() != null && Objects.equals(getId(), member.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
