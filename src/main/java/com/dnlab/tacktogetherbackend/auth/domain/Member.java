@@ -1,9 +1,9 @@
 package com.dnlab.tacktogetherbackend.auth.domain;
 
-
-import com.dnlab.tacktogetherbackend.global.util.TimestampUtil;
 import lombok.*;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -17,14 +17,12 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @NoArgsConstructor
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-
 
     @Column(name = "username", nullable = false, length = 45, unique = true)
     private String username;
@@ -44,18 +42,17 @@ public class Member {
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Authority> authorities = new ArrayList<>();
 
-    @Column(name = "refresh_token")
-    private String refreshToken;
-
     @Column(name = "create_time", nullable = false)
+    @CreationTimestamp
     private Timestamp createTime;
 
     @Column(name = "update_time", nullable = false)
+    @UpdateTimestamp
     private Timestamp updateTime;
 
     @Builder
     @SuppressWarnings("squid:S107")
-    public Member(Long id, String username, String password, String name,String nickname, boolean enabled, List<Authority> authorities, String refreshToken) {
+    public Member(Long id, String username, String password, String name, String nickname, boolean enabled, List<Authority> authorities) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -63,19 +60,6 @@ public class Member {
         this.nickname = nickname;
         this.enabled = enabled;
         this.authorities = authorities;
-        this.refreshToken = refreshToken;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        Timestamp currentTime = TimestampUtil.getCurrentTime();
-        this.createTime = currentTime;
-        this.updateTime = currentTime;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updateTime = TimestampUtil.getCurrentTime();
     }
 
     @Override
