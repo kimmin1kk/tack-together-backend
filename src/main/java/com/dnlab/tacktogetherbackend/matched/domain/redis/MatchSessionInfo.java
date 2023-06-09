@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class MatchSessionInfo implements Serializable {
     @Id
+    @Indexed
     private String sessionId;
     private Long matchInfoId;
     private Set<SessionMemberInfo> memberInfos = new LinkedHashSet<>();

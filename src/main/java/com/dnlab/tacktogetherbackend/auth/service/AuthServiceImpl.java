@@ -1,26 +1,29 @@
 package com.dnlab.tacktogetherbackend.auth.service;
 
 import com.dnlab.tacktogetherbackend.auth.common.JwtTokenProvider;
+import com.dnlab.tacktogetherbackend.auth.domain.redis.RefreshToken;
 import com.dnlab.tacktogetherbackend.auth.dto.*;
 import com.dnlab.tacktogetherbackend.auth.common.Role;
 import com.dnlab.tacktogetherbackend.auth.domain.Authority;
 import com.dnlab.tacktogetherbackend.auth.domain.Member;
 import com.dnlab.tacktogetherbackend.auth.exception.DuplicateUsernameException;
+import com.dnlab.tacktogetherbackend.auth.exception.TokenNotFoundException;
 import com.dnlab.tacktogetherbackend.auth.repository.AuthorityRepository;
 import com.dnlab.tacktogetherbackend.auth.repository.MemberRepository;
+import com.dnlab.tacktogetherbackend.auth.repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Set;
 
 
 @Service
@@ -32,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
+    private final TokenRepository tokenRepository;
 
     @Override
     @Transactional
@@ -45,8 +49,11 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
-        memberRepository.findMemberByUsername(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없음"))
-                .setRefreshToken(refreshToken);
+        Set<RefreshToken> tokens = tokenRepository.findRefreshTokensByUsername(authentication.getName());
+        log.debug("infos: " + tokens);
+        tokenRepository.deleteAll(tokens);
+        RefreshToken tokenInfo = new RefreshToken(refreshToken, authentication.getName());
+        tokenRepository.save(tokenInfo);
 
         return LoginResponseDTO.builder()
                 .username(authentication.getName())
@@ -80,19 +87,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public LoginResponseDTO refreshAccessToken(RefreshTokenRequestDTO refreshTokenRequestDTO) {
         String refreshToken = refreshTokenRequestDTO.getRefreshToken();
         jwtTokenProvider.validateToken(refreshToken); // 유효성 검사
 
-        Member member = memberRepository.findMemberByRefreshToken(refreshToken).orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없음"));
+        RefreshToken tokenInfo = tokenRepository.findById(refreshToken)
+                .orElseThrow(() -> new TokenNotFoundException("Refresh token not found"));
+
+        tokenRepository.delete(tokenInfo);
 
         String newRefreshToken = jwtTokenProvider.createRefreshToken();
-        member.setRefreshToken(newRefreshToken);
+        tokenInfo.setToken(newRefreshToken);
+        tokenRepository.save(tokenInfo);
 
         return LoginResponseDTO.builder()
-                .username(member.getUsername())
-                .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(member.getUsername(), null, new ArrayList<>())))
+                .username(tokenInfo.getUsername())
+                .accessToken(jwtTokenProvider.createAccessToken(new UsernamePasswordAuthenticationToken(tokenInfo.getUsername(), null, new ArrayList<>())))
                 .refreshToken(newRefreshToken)
                 .build();
     }
@@ -133,5 +143,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return MemberUpdateDTO.of(member);
+    }
+
+    @Override
+    public void logout(String username) {
+        tokenRepository.deleteAll(tokenRepository.findRefreshTokensByUsername(username));
     }
 }
