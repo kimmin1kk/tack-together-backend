@@ -114,4 +114,24 @@ public class AuthServiceImpl implements AuthService {
         }
         return new CheckUsernameRequestDTO(!memberRepository.existsByUsername(username));
     }
+
+    @Override
+    @Transactional
+    public MemberUpdateDTO updateMemberInfo(MemberUpdateDTO memberUpdateDTO, String username) {
+        Member member = memberRepository.findMemberByUsername(username).orElseThrow();
+
+        if (memberUpdateDTO.getName() != null) {
+            member.setName(memberUpdateDTO.getName());
+        }
+
+        if (memberUpdateDTO.getNickname() != null) {
+            member.setNickname(memberUpdateDTO.getNickname());
+        }
+
+        if (memberUpdateDTO.getPassword() != null) {
+            member.setPassword(passwordEncoder.encode(memberUpdateDTO.getPassword()));
+        }
+
+        return MemberUpdateDTO.of(member);
+    }
 }
