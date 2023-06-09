@@ -50,23 +50,23 @@ public class MatchServiceImpl implements MatchService {
     private final TaxiFareCalculator taxiFareCalculator;
 
     @Override
-    public String addMatchRequest(MatchRequestDTO matchRequestDTO) {
-        if (isMatchRequestExistInActiveMatchRequests(matchRequestDTO.getUsername())) {
-            cancelSearchingByUsername(matchRequestDTO.getUsername());
+    public String addMatchRequest(MatchRequestDTO matchRequestDTO, String username) {
+        if (isMatchRequestExistInActiveMatchRequests(username)) {
+            cancelSearchingByUsername(username);
         }
 
-        Member member = memberRepository.findMemberByUsername(matchRequestDTO.getUsername()).orElseThrow();
-        matchRequestDTO.setNickname(member.getNickname());
-        MatchRequest matchRequest = new MatchRequest(matchRequestDTO);
+        Member member = memberRepository.findMemberByUsername(username).orElseThrow();
+        MatchRequest matchRequest = new MatchRequest(matchRequestDTO, username, member.getNickname());
         activeMatchRequests.put(matchRequest.getId(), matchRequest);
 
         log.info("매칭 대기열이 추가됨 : {" + matchRequest + "}");
+        log.info("매칭 대기열 : {" + activeMatchRequests + "}");
         return matchRequest.getId();
     }
 
     @Override
     public Optional<MatchRequest> getMatchRequestById(String matchRequestId) {
-        return Optional.of(activeMatchRequests.get(matchRequestId));
+        return Optional.ofNullable(activeMatchRequests.get(matchRequestId));
     }
 
     @Override
@@ -75,11 +75,11 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public String findMatchingMatchRequests(String matchRequestId) {
+    public String findMatchingMatchRequests(String matchRequestId, String username) {
         MatchRequest matchRequest = getMatchRequestById(matchRequestId).orElseThrow(NoSuchMatchRequestException::new);
         log.info("적합한 요청 찾는 중 ...");
         List<MatchRequest> suitableRequests = activeMatchRequests.keySet().stream()
-                .filter(key -> !key.equals(matchRequestId))
+                .filter(key -> !key.startsWith(username) && !key.equals(matchRequestId))
                 .map(activeMatchRequests::get)
                 .filter(req -> (!req.isMatched() && !req.getUsername().equals(matchRequest.getUsername()) && isSuitableRequests(matchRequest, req)))
                 .collect(Collectors.toList());
@@ -162,11 +162,6 @@ public class MatchServiceImpl implements MatchService {
         temporaryMatchSessionInfoRepository.delete(temporaryMatchSessionInfo);
     }
 
-    @Override
-    public void resetMatchRequests() {
-        activeMatchRequests.clear();
-    }
-
     private boolean isSuitableRequests(MatchRequest originReq, MatchRequest targetReq) {
         return !targetReq.isMatched()
                 && isSuitableOriginRanges(originReq, targetReq)
@@ -175,12 +170,12 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void cancelSearchingByUsername(String username) {
-        log.debug("removeMatchRequestsByUsername 이 username{" + username + "} 에 의해 호출됨");
         activeMatchRequests.keySet()
                 .stream()
-                .map(activeMatchRequests::get)
-                .filter(matchRequest -> matchRequest.getUsername().equals(username))
-                .forEach(matchRequest -> activeMatchRequests.remove(matchRequest.getId()));
+                .filter(key -> key.startsWith(username))
+                .forEach(activeMatchRequests::remove);
+
+        log.info("삭제 후 매칭 대기열 : " + activeMatchRequests);
     }
 
     private boolean isSuitableOriginRanges(MatchRequest req1, MatchRequest req2) {
