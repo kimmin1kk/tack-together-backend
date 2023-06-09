@@ -55,6 +55,13 @@ public class AuthController {
         }
     }
 
+    @DeleteMapping("/logout")
+    public ResponseEntity<LogoutResponseDTO> logout(Principal principal) {
+        authService.logout(principal.getName());
+
+        return ResponseEntity.ok(new LogoutResponseDTO("OK"));
+    }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<LoginResponseDTO> refreshAccessToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
         try {

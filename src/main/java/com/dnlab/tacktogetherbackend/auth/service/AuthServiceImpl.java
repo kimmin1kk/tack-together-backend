@@ -144,4 +144,9 @@ public class AuthServiceImpl implements AuthService {
 
         return MemberUpdateDTO.of(member);
     }
+
+    @Override
+    public void logout(String username) {
+        tokenRepository.deleteAll(tokenRepository.findRefreshTokensByUsername(username));
+    }
 }
