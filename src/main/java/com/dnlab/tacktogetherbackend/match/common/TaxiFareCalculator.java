@@ -21,9 +21,9 @@ public class TaxiFareCalculator {
     public TaxiFares calculateFare(int totalFare,
                                    int waypointDistance,
                                    int destinationDistance) {
-        int waypointFare = (minimumFareProperties.getFare() / 2) +
+        int waypointFare = (int) (((double) minimumFareProperties.getFare() / 2) +
                 ((totalFare - minimumFareProperties.getFare()) *
-                        (waypointDistance / (destinationDistance + waypointDistance)));
+                        ((double) waypointDistance / (destinationDistance + waypointDistance))));
 
         // 계산 후 잔금은 목적지로 가는 사람에게 부담
         int destinationFare = totalFare - waypointFare;
