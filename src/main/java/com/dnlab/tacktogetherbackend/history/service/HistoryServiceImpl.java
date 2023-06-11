@@ -50,7 +50,7 @@ public class HistoryServiceImpl implements HistoryService {
         MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
         return HistorySummaryDTO.builder()
                 .id(matchInfo.getId())
-                .date(matchInfo.getCreateTime().getTime())
+                .createTime(matchInfo.getCreateTime().getTime())
                 .origin(matchInfo.getOrigin())
                 .destination(matchInfo.getDestination())
                 .paymentAmount(matchInfoMember.getPaymentAmount())
@@ -61,11 +61,10 @@ public class HistoryServiceImpl implements HistoryService {
         MatchInfoMember matchInfoMember = matchInfoMemberRepository.findMatchInfoMemberByMatchInfoAndMemberUsername(matchInfo, username);
         return HistoryDetailDTO.builder()
                 .id(matchInfo.getId())
-                .date(matchInfo.getCreateTime().getTime())
+                .createTime(matchInfo.getCreateTime().getTime())
                 .origin(matchInfo.getOrigin())
                 .waypoints(matchInfo.getWaypoints())
                 .destination(matchInfo.getDestination())
-                .createTime(matchInfo.getCreateTime().getTime())
                 .distance(matchInfo.getTotalDistance())
                 .dropOffTime(matchInfoMember.getDropOffTime().getTime())
                 .opponentMember(matchInfo.getMatchInfoMembers().toString())

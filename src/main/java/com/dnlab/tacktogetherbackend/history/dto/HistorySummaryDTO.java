@@ -17,17 +17,19 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class HistorySummaryDTO implements Serializable { //히스토리 간단히 DTO
     private long id;
-    private long date;
+    private long createTime;
     private String origin;
     private String destination;
+    private String waypoints;
     private int paymentAmount;
 
     @Builder
-    public HistorySummaryDTO(long id, long date, String origin, String destination, int paymentAmount) {
+    public HistorySummaryDTO(long id, long createTime, String origin, String destination, String waypoints, int paymentAmount) {
         this.id = id;
-        this.date = date;
+        this.createTime = createTime;
         this.origin = origin;
         this.destination = destination;
+        this.waypoints = waypoints;
         this.paymentAmount = paymentAmount;
     }
 }
