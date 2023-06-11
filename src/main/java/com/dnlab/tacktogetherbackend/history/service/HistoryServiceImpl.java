@@ -53,6 +53,7 @@ public class HistoryServiceImpl implements HistoryService {
                 .createTime(matchInfo.getCreateTime().getTime())
                 .origin(matchInfo.getOrigin())
                 .destination(matchInfo.getDestination())
+                .waypoints(matchInfo.getWaypoints())
                 .paymentAmount(matchInfoMember.getPaymentAmount())
                 .build();
     }
