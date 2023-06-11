@@ -15,15 +15,31 @@ public class WebFluxKakaoMapServiceImpl implements KakaoMapService {
 
     @Override
     public ResponseDirections getRoute(RequestDirections requestDirections) {
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/directions")
-                        .queryParam("origin", requestDirections.getOrigin())
-                        .queryParam("destination", requestDirections.getDestination())
-                        .queryParam("waypoints", requestDirections.getWaypoints())
-                        .build())
-                .retrieve()
-                .bodyToMono(ResponseDirections.class)
-                .block();
+        ResponseDirections responseDirections;
+
+        if (requestDirections.getWaypoints() == null) {
+            responseDirections = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/directions")
+                            .queryParam("origin", requestDirections.getOrigin())
+                            .queryParam("destination", requestDirections.getDestination())
+                            .build())
+                    .retrieve()
+                    .bodyToMono(ResponseDirections.class)
+                    .block();
+        } else {
+            responseDirections = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/directions")
+                            .queryParam("origin", requestDirections.getOrigin())
+                            .queryParam("destination", requestDirections.getDestination())
+                            .queryParam("waypoints", requestDirections.getWaypoints())
+                            .build())
+                    .retrieve()
+                    .bodyToMono(ResponseDirections.class)
+                    .block();
+        }
+
+        return responseDirections;
     }
 }
