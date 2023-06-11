@@ -1,7 +1,6 @@
 package com.dnlab.tacktogetherbackend.matched.service;
 
 import com.dnlab.tacktogetherbackend.matched.dto.*;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface MatchedService {
     LocationInfoResponseDTO handleLocationUpdate(LocationUpdateRequestDTO locationUpdateRequestDTO, String username);
@@ -9,7 +8,5 @@ public interface MatchedService {
     String getOpponentUsernameBySessionId(String sessionId, String username);
     DropOffNotificationDTO processDropOffRequest(DropOffRequestDTO dropOffRequestDTO, String username);
     SettlementReceivedRequestDTO processSettlementRequest(SettlementRequestDTO settlementRequestDTO, String username);
-
-    @Transactional(readOnly = true)
     SettlementInfoDTO getSettlementInfo(String username, String sessionId);
 }

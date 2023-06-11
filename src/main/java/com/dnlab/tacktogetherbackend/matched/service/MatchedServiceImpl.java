@@ -101,6 +101,7 @@ public class MatchedServiceImpl implements MatchedService {
                     .origin(matchInfo.getOrigin())
                     .destination(waypointMember.getDestination())
                     .build()));
+            waypointMember.setDropOffTime(TimestampUtil.getCurrentTime());
 
         } else if (destinationMember.getMember().getUsername().equals(username)) {
             int distance = kakaoMapService.getDistance(RequestDirections.builder()
@@ -113,6 +114,7 @@ public class MatchedServiceImpl implements MatchedService {
             matchInfo.setStatus(RidingStatus.DROP_OFFED);
             destinationMember.setDestination(dropOffRequestDTO.getEndLocation());
             destinationMember.setDistance(distance);
+            destinationMember.setDropOffTime(TimestampUtil.getCurrentTime());
         }
 
         return DropOffNotificationDTO.of(dropOffRequestDTO, username);
@@ -133,6 +135,7 @@ public class MatchedServiceImpl implements MatchedService {
         MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
         matchInfo.setTotalFare(settlementRequestDTO.getTotalFare());
         matchInfo.setStatus(RidingStatus.COMPLETE);
+        matchInfo.setMatchEndTime(TimestampUtil.getCurrentTime());
 
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
