@@ -136,8 +136,8 @@ public class MatchedServiceImpl implements MatchedService {
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
         MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().max(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
 
-         int waypointPaymentAmount = (int) (settlementRequestDTO.getTotalFare() * matchSessionInfo.getWaypointFareRate());
-         int destinationPaymentAmount = settlementRequestDTO.getTotalFare() - waypointPaymentAmount;
+        int waypointPaymentAmount = (int) ((double) settlementRequestDTO.getTotalFare() * (matchSessionInfo.getWaypointFareRate() / 100));
+        int destinationPaymentAmount = settlementRequestDTO.getTotalFare() - waypointPaymentAmount;
 
         waypointMatchInfoMember.setPaymentAmount(waypointPaymentAmount);
         destinationMatchInfoMember.setPaymentAmount(destinationPaymentAmount);
