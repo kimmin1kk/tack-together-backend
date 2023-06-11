@@ -19,6 +19,8 @@ public class MatchSessionInfo implements Serializable {
     @Indexed
     private String sessionId;
     private Long matchInfoId;
+    private double waypointFareRate;
+    private double destinationFareRate;
     private Set<SessionMemberInfo> memberInfos = new LinkedHashSet<>();
 
     public MatchSessionInfo(Set<SessionMemberInfo> memberInfos, Long matchInfoId) {

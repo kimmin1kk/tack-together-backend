@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -135,12 +136,11 @@ public class MatchedServiceImpl implements MatchedService {
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
         MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().max(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
 
-        TaxiFares taxiFares = taxiFareCalculator.calculateFare(settlementRequestDTO.getTotalFare(),
-                waypointMatchInfoMember.getDistance(),
-                destinationMatchInfoMember.getDistance());
+         int waypointPaymentAmount = (int) (settlementRequestDTO.getTotalFare() * matchSessionInfo.getWaypointFareRate());
+         int destinationPaymentAmount = settlementRequestDTO.getTotalFare() - waypointPaymentAmount;
 
-        waypointMatchInfoMember.setPaymentAmount(taxiFares.getWaypointFare());
-        destinationMatchInfoMember.setPaymentAmount(taxiFares.getDestinationFare());
+        waypointMatchInfoMember.setPaymentAmount(waypointPaymentAmount);
+        destinationMatchInfoMember.setPaymentAmount(destinationPaymentAmount);
         matchSessionInfoRepository.delete(matchSessionInfo);
 
         RouteInfoDTO routeInfoDTO = RouteInfoDTO.builder()
@@ -159,15 +159,15 @@ public class MatchedServiceImpl implements MatchedService {
                         .filter(sessionMemberInfo -> !sessionMemberInfo.getUsername().equals(username))
                         .findAny().orElseThrow()
                         .getUsername())
-                .destinationRate(taxiFares.getDestinationRate())
-                .waypointRate(taxiFares.getWaypointRate())
+                .destinationRate(matchSessionInfo.getDestinationFareRate())
+                .waypointRate(matchSessionInfo.getWaypointFareRate())
                 .routeInfo(routeInfoDTO)
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public SettlementInfoDTO getSettlementInfo(String username) {
+    public SettlementInfoDTO getSettlementInfo(String username, String sessionId) {
         List<MatchInfo> matchInfos = matchInfoRepository.findMatchInfosByUsernameAndStatus(username, RidingStatus.DROP_OFFED);
         MatchInfo matchInfo = matchInfos.stream().findFirst().orElseThrow();
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
@@ -182,6 +182,13 @@ public class MatchedServiceImpl implements MatchedService {
         TaxiFares taxiFares = taxiFareCalculator.calculateFare(10000,
                 waypointMember.getDistance(),
                 destinationMember.getDistance());
+
+        Optional<MatchSessionInfo> optionalMatchSessionInfo = matchSessionInfoRepository.findById(sessionId);
+        if (optionalMatchSessionInfo.isPresent()) {
+            MatchSessionInfo matchSessionInfo = optionalMatchSessionInfo.get();
+            matchSessionInfo.setDestinationFareRate(taxiFares.getDestinationRate());
+            matchSessionInfo.setWaypointFareRate(taxiFares.getWaypointRate());
+        }
 
         return SettlementInfoDTO.builder()
                 .origin(matchInfo.getOrigin())
