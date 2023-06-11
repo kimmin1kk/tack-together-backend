@@ -12,7 +12,7 @@ public interface MatchInfoRepository extends JpaRepository<MatchInfo, Long> {
 
     @Query("SELECT mi " +
             "FROM MatchInfo mi " +
-            "WHERE mi.id = (" +
+            "WHERE mi.id IN (" +
             "SELECT mim.matchInfo.id " +
             "FROM MatchInfoMember mim " +
             "WHERE mim.member.username = :username AND mim.matchInfo.status = 'COMPLETE') " +
