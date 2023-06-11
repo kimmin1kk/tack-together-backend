@@ -188,6 +188,7 @@ public class MatchedServiceImpl implements MatchedService {
             MatchSessionInfo matchSessionInfo = optionalMatchSessionInfo.get();
             matchSessionInfo.setDestinationFareRate(taxiFares.getDestinationRate());
             matchSessionInfo.setWaypointFareRate(taxiFares.getWaypointRate());
+            matchSessionInfoRepository.save(matchSessionInfo);
         }
 
         return SettlementInfoDTO.builder()
