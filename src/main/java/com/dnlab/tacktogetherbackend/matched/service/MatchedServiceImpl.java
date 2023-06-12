@@ -14,6 +14,7 @@ import com.dnlab.tacktogetherbackend.matched.domain.redis.SessionMemberInfo;
 import com.dnlab.tacktogetherbackend.matched.dto.*;
 import com.dnlab.tacktogetherbackend.matched.repository.MatchSessionInfoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchedServiceImpl implements MatchedService {
@@ -99,6 +101,7 @@ public class MatchedServiceImpl implements MatchedService {
                     .origin(matchInfo.getOrigin())
                     .destination(waypointMember.getDestination())
                     .build()));
+            waypointMember.setDropOffTime(TimestampUtil.getCurrentTime());
 
         } else if (destinationMember.getMember().getUsername().equals(username)) {
             int distance = kakaoMapService.getDistance(RequestDirections.builder()
@@ -111,6 +114,7 @@ public class MatchedServiceImpl implements MatchedService {
             matchInfo.setStatus(RidingStatus.DROP_OFFED);
             destinationMember.setDestination(dropOffRequestDTO.getEndLocation());
             destinationMember.setDistance(distance);
+            destinationMember.setDropOffTime(TimestampUtil.getCurrentTime());
         }
 
         return DropOffNotificationDTO.of(dropOffRequestDTO, username);
@@ -131,11 +135,13 @@ public class MatchedServiceImpl implements MatchedService {
         MatchInfo matchInfo = matchInfoRepository.findById(matchSessionInfo.getMatchInfoId()).orElseThrow();
         matchInfo.setTotalFare(settlementRequestDTO.getTotalFare());
         matchInfo.setStatus(RidingStatus.COMPLETE);
+        matchInfo.setMatchEndTime(TimestampUtil.getCurrentTime());
 
         Set<MatchInfoMember> matchInfoMembers = matchInfo.getMatchInfoMembers();
         MatchInfoMember waypointMatchInfoMember = matchInfoMembers.stream().min(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
         MatchInfoMember destinationMatchInfoMember = matchInfoMembers.stream().max(Comparator.comparing(MatchInfoMember::getDistance)).orElseThrow();
 
+        log.debug("matchSessionInfo in processSettlementRequest: {" + matchSessionInfo + "}");
         int waypointPaymentAmount = (int) ((double) settlementRequestDTO.getTotalFare() * (matchSessionInfo.getWaypointFareRate() / 100));
         int destinationPaymentAmount = settlementRequestDTO.getTotalFare() - waypointPaymentAmount;
 
@@ -189,6 +195,7 @@ public class MatchedServiceImpl implements MatchedService {
             matchSessionInfo.setDestinationFareRate(taxiFares.getDestinationRate());
             matchSessionInfo.setWaypointFareRate(taxiFares.getWaypointRate());
             matchSessionInfoRepository.save(matchSessionInfo);
+            log.debug("matchSessionInfo in getSettlementInfo: {" + matchSessionInfo + "}");
         }
 
         return SettlementInfoDTO.builder()
